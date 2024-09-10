@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker</title>
+    <style>
+:root {
+    --primary-color: #ce2626; /* Deep teal */
+    --secondary-color: #E63946; /* Vivid coral red */
+    --background-color: #cccccc; /* Soft off-white */
+    --text-color: #1D1F21; /* Very dark charcoal */
+    --accent-color: #fefefe; /* Soft mint blue */
+    --border-color: #D3D3D3; /* Soft light grey for borders */
+
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    background: var(--border-color);
+}
+
+h1 {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    background: var(--accent-color);
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 600px;
+}
+
+.container label, .container input {
+    margin-right: 12px;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+input[type="text"] {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 300px;
+    background: #ffffff;
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+    outline: none;
+}
+
+input[type="text"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+button {
+    padding: 10px 20px;
+    margin-left: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    background: var(--primary-color);
+    color: #ffffff;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+button:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+#status {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-left: 20px;
+    width: 220px;
+    display: inline-block;
+    text-align: left;
+    color: var(--text-color);
+}
+
+#status.clocked-in {
+    color: var(--primary-color);
+}
+
+#status.clocked-out {
+    color: var(--secondary-color);
+}
+
+.message {
+    position: fixed;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-color);
+    color: var(--text-color);
+    padding: 15px 25px;
+    border-radius: 4px;
+    font-size: 1rem;
+    opacity: 0;
+    transition: all 0.5s ease;
+    z-index: 1000;
+    border: 1px solid var(--border-color);
+}
+
+.message.show {
+    bottom: 30px;
+    opacity: 1;
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    text-transform: none;
+}
+
+.chart-wrapper {
+    display: flex;
+    align-items: flex-start;
+    width: 90%;
+    margin-top: 20px;
+}
+
+.chart-wrapper > * {
+    background-color: #ffffff;
+    padding: 10px;
+    flex-direction: row;
+}
+
+
+.chart-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 200px;
+    margin: 0;
+}
+
+.day-line-container {
+    width: 80%;
+    overflow-x: hidden;
+    padding: 40px;
+    background-color: var(--background-color);
+    box-sizing: border-box;
+}
+
+.day-line {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background-color: var(--accent-color);
+    margin-bottom: 5px;
+    border-radius: 0px;
+}
+
+.day-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 6px;
+    font-size: 1rem;
+    color: var(--text-color);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.time-block {
+    position: absolute;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 0px;
+}
+
+.time-block.highlighted {
+    background: var(--secondary-color);
+}
+
+.time-block.current {
+    border-radius: 4px;
+    background: var(--secondary-color);
+    transition: width 1s linear;
+}
+
+.show {
+    opacity: 1;
+}
+
+.hour-timeline {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.8rem;
+    color: var(--text-color);
+}
+
+.hour-marker {
+    width: 0;
+    margin-top: 5px;
+    text-align: center;
+    transform: rotate(-45deg);
+    pointer-events: none;
+}
+
+.bar {
+    flex: 1;
+    margin: 0 6px;
+    background: var(--primary-color);
+    text-align: center;
+    color: #ffffff;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 45px;
+    position: relative;
+    width: 150px;
+    transition: background-color 0.3s ease;
+
+
+    display: none;
+}
+
+.bar:hover {
+    background-color: var(--secondary-color);
+}
+
+.bar-label {
+    margin-top: 5px;
+    font-size: 18px;
+    padding: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.bar-value {
+    margin-left: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.tooltip {
+    position: absolute;
+    padding: 10px 14px;
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    z-index: 1000;
+    border: 1px solid var(--border-color);
+}
+
+@keyframes move-tooltip {
+    from {
+        transform: translate(0, 0);
+    }
+    to {
+        transform: translate(var(--tooltip-x), var(--tooltip-y));
+    }
+}
+
+.tooltip.animate {
+    opacity: 1;
+    animation: move-tooltip 0.3s ease-out forwards;
+}
+.container-pay-rate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-color);
+    padding: 20px;
+    max-width: 600px;
+    border-top-left-radius: 10px;
+
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+
+.container-pay-rate label {
+    margin-right: 12px;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.container-pay-rate input[type="number"] {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 150px;
+    background: #ffffff;
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+    outline: none;
+}
+
+.container-pay-rate input[type="number"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.totals-container {
+
+}
+
+.totals-container div {
+    font-size: 1.2rem; /* Larger font size for readability */
+    color: var(--text-color); /* Use the standard text color */
+    margin-bottom: 4px; /* Space between lines */
+    padding: 4px; /* Padding for individual items */
+    transition: transform 0.2s ease; /* Smooth hover effect */
+
+    padding-bottom: 32.5px;
+}
+
+
+    </style>
+</head>    
+
+<div class="container-pay-rate">
+    <label for="pay-rate">Pay Rate (per hour):</label>
+    <input type="number" id="pay-rate" name="pay-rate" placeholder="Enter pay rate..." step="0.01">
+</div>
+
+<body><div class="container">
+    <label for="note">Note:</label>
+    <input type="text" id="note" name="note" placeholder="Enter note...">
+    <button onclick="clockIn()">Clock In</button>
+    <button onclick="clockOut()">Clock Out</button>
+    <span id="status" class="clocked-out">Clocked out</span>
+
+</div>
+
+<div id="error-message" class="message"></div>
+<div class="chart-wrapper">
+    <div class="day-line-container">
+        <div class="hour-timeline"></div>
+    </div>      
+    
+    <div class="totals-container">
+        <h3>Totals</h3>
+        <div id="daily-totals"></div>
+        <div id="weekly-totals"></div>
+        <div id="overall-totals"></div>
+    </div>
+    
+</div>  
+<div class="chart-container">
+</div>
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+let chartContainer;
+let dayLineContainer;
+let currentTimeBlock = null;
+let earningsUpdateInterval;
+
+// Initialize chartContainer and dayLineContainer references
+function initializeContainers() {
+    chartContainer = document.querySelector('.chart-container');
+    dayLineContainer = document.querySelector('.day-line-container');
+}
+
+class MessageQueue {
+    constructor() {
+        this.queue = [];
+        this.isProcessing = false;
+        this.baseDuration = 1500;
+        this.minDuration = 500;
+    }
+
+    addMessage(message, isError = false) {
+        return new Promise((resolve) => {
+            this.queue.push({ message, isError, resolve });
+            this.processQueue();
+        });
+    }
+
+    async processQueue() {
+        if (this.isProcessing || this.queue.length === 0) return;
+
+        this.isProcessing = true;
+        const { message, isError, resolve } = this.queue.shift();
+
+        const adjustedDuration = this.calculateDuration(this.queue.length);
+
+        await this.showMessage(message, isError, adjustedDuration);
+
+        resolve();
+        this.isProcessing = false;
+        this.processQueue();
+    }
+
+    calculateDuration(queueLength) {
+        const speedMultiplier = 0.5 ** (queueLength / 2);
+        const duration = this.baseDuration * speedMultiplier;
+        return Math.max(this.minDuration, duration);
+    }
+
+    async showMessage(message, isError, duration) {
+        return new Promise((resolve) => {
+            const messageBox = document.getElementById('error-message');
+            messageBox.textContent = message;
+            if (isError) {
+                messageBox.classList.add('error');
+            } else {
+                messageBox.classList.remove('error');
+            }
+
+            const animationDuration = Math.min(500, duration / 2);
+            messageBox.style.transition = `all ${animationDuration}ms ease`;
+
+            messageBox.classList.add('show');
+
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(resolve, animationDuration);
+            }, duration - animationDuration);
+        });
+    }
+}
+
+// Instantiate the message queue
+const messageQueue = new MessageQueue();
+function createHourTimeline() {
+    const hours = Array.from({ length: 25 }, (_, i) => i);
+    const hourTimeline = document.querySelector('.hour-timeline');
+    const dayLineWidth = document.querySelector('.day-line').offsetWidth;
+
+    hourTimeline.style.width = `${dayLineWidth}px`;
+    hourTimeline.innerHTML = '';
+
+    hours.forEach((hour, index) => {
+        const hourMarker = document.createElement('div');
+        hourMarker.className = 'hour-marker';
+
+        // Calculate left position
+        hourMarker.style.left = `${(hour / 24) * 100}%`;
+
+        // Set text content for the hour marker, making the last one blank
+        if (index < hours.length - 1) {
+            hourMarker.textContent = `${hour % 12 === 0 ? 12 : hour % 12}${hour < 12 ? 'AM' : 'PM'}`;
+        } else {
+            hourMarker.textContent = ''; // Last marker is blank
+        }
+
+        hourTimeline.appendChild(hourMarker);
+    });
+}
+
+
+// Modify the addDayLine function to include earnings in the tooltip
+function addDayLine(day, startTime, endTime, note, index, isCurrent = false) {
+    let dayLine = document.getElementById(`day-line-${day}`);
+    if (!dayLine) {
+        dayLine = document.createElement('div');
+        dayLine.className = 'day-line';
+        dayLine.id = `day-line-${day}`;
+        dayLineContainer.appendChild(dayLine);
+
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'day-label';
+        dayLabel.textContent = day;
+        dayLine.appendChild(dayLabel);
+    }
+
+    const startPercent = (startTime.getHours() + startTime.getMinutes() / 60) / 24 * 100;
+    const endPercent = (endTime.getHours() + endTime.getMinutes() / 60) / 24 * 100;
+
+    const timeBlock = document.createElement('div');
+    timeBlock.className = 'time-block';
+    timeBlock.style.left = `${startPercent}%`;
+    timeBlock.style.width = `${endPercent - startPercent}%`;
+    timeBlock.dataset.index = index;
+
+    if (isCurrent) {
+        timeBlock.classList.add('current');
+    }
+
+    const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
+    const durationInMinutes = (endTime - startTime) / (1000 * 60);
+    const earnings = ((durationInMinutes / 60) * payRate).toFixed(2);
+
+    let tooltip = document.getElementById('tooltip');
+    let targetX = 0;
+    let targetY = 0;
+    let tooltipVisible = false;
+
+    function lerp(start, end, t) {
+        return start + t * (end - start);
+    }
+
+    function updateTooltipPosition() {
+        const currentX = parseFloat(tooltip.style.left) || 0;
+        const currentY = parseFloat(tooltip.style.top) || 0;
+
+        const newX = lerp(currentX, targetX, 0.1);
+        const newY = lerp(currentY, targetY, 0.1);
+
+        tooltip.style.left = `${newX}px`;
+        tooltip.style.top = `${newY}px`;
+
+        if (tooltipVisible) {
+            requestAnimationFrame(updateTooltipPosition);
+        }
+    }
+
+    function handleMouseOver(event, note, startTime, endTime, earnings) {
+        tooltipVisible = true;
+
+        // Set tooltip content
+        tooltip.innerHTML = `Note: ${note || 'N/A'}<br>Start: ${formatTimeForDisplay(startTime)}<br>End: ${formatTimeForDisplay(endTime)}<br>Earnings: $${earnings}`;
+
+        targetX = event.pageX + 10;
+        targetY = event.pageY + 10;
+
+        // Set tooltip visibility
+        tooltip.style.opacity = 1;
+
+        // Update tooltip's dataset to reflect if it's the current timespan
+        tooltip.dataset.current = isCurrent ? 'true' : 'false';
+
+        updateTooltipPosition();
+    }
+
+    function handleMouseOut() {
+        tooltipVisible = false;
+        tooltip.style.opacity = 0;
+        tooltip.dataset.current = 'false'; // Reset when mouse leaves
+    }
+
+    timeBlock.addEventListener('mouseover', (event) => handleMouseOver(event, note, startTime, endTime, earnings));
+    timeBlock.addEventListener('mouseout', handleMouseOut);
+    timeBlock.addEventListener('mousemove', (event) => {
+        targetX = event.pageX + 10;
+        targetY = event.pageY + 10;
+    });
+
+    timeBlock.addEventListener('click', () => {
+        document.querySelectorAll('.time-block').forEach(block => block.classList.remove('highlighted'));
+        timeBlock.classList.add('highlighted');
+    });
+
+    dayLine.appendChild(timeBlock);
+
+    return timeBlock;
+}
+
+
+function lerp(start, end, t) {
+    return start + (end - start) * t;
+}
+
+function updateCurrentTimeBlock() {
+    if (!currentTimeBlock) return;
+    const now = new Date();
+    const startTime = currentTimeBlock.clockIn;
+
+    const startPercent = (startTime.getHours() + startTime.getMinutes() / 60) / 24 * 100;
+    const currentPercent = (now.getHours() + now.getMinutes() / 60) / 24 * 100;
+
+    currentTimeBlock.element.style.width = `${currentPercent - startPercent}%`;
+
+    // Calculate real-time earnings
+    const durationInSeconds = (now - startTime) / 1000;
+    const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
+    const earnings = ((durationInSeconds / 3600) * payRate).toFixed(4);
+
+    // Only update the tooltip if the mouse is hovering over the current time block
+    const tooltip = document.getElementById('tooltip');
+    if (tooltip.dataset.current === 'true') {
+        tooltip.innerHTML = `Note: ${currentTimeBlock.note || 'N/A'}<br>Start: ${formatTimeForDisplay(startTime)}<br>Now: ${formatTimeForDisplay(now)}<br>Earnings: $${earnings}`;
+    }
+
+    // Update the totals container with real-time earnings
+    calculateAndDisplayTotals();
+}
+
+
+
+
+// Call this function every minute to update the current time block's width
+//setInterval(updateCurrentTimeBlock, 60000);
+setInterval(updateCurrentTimeBlock, 1000);
+
+
+
+async function fetchData() {
+    const response = await fetch('/data');
+    const data = await response.json();
+    return data;
+}
+
+function processData(data) {
+            const timelines = {};
+            const minutesWorked = {};
+            const earnings = {};
+            const dayLabels = [];
+
+            const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
+
+            data.forEach(entry => {
+                const dateString = entry.Time;
+                const [datePart, timePart] = dateString.split(' ');
+                const [year, month, day] = datePart.split('-').map(Number);
+                const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                const date = new Date(year, month - 1, day, hours, minutes, seconds);
+                const localDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                const isoDateString = localDay.toISOString().split('T')[0];
+
+                if (!timelines[isoDateString]) {
+                    timelines[isoDateString] = [];
+                    minutesWorked[isoDateString] = 0;
+                    earnings[isoDateString] = 0;
+                    dayLabels.push(isoDateString);
+                }
+
+                if (entry.Action === 'Clock In') {
+                    timelines[isoDateString].push({ clockIn: date, clockOut: null, note: entry.Note });
+                } else if (entry.Action === 'Clock Out') {
+                    const lastSession = timelines[isoDateString].reduce((latest, session) => {
+                        return (!session.clockOut && (!latest || session.clockIn > latest.clockIn)) ? session : latest;
+                    }, null);
+
+                    if (lastSession) {
+                        lastSession.clockOut = date;
+                        const duration = (lastSession.clockOut - lastSession.clockIn) / (1000 * 60); // duration in minutes
+                        minutesWorked[isoDateString] += duration;
+                        earnings[isoDateString] += (duration / 60) * payRate;
+                    }
+                }
+            });
+
+            return { timelines, minutesWorked, earnings, dayLabels };
+        }
+
+
+function updateDayLines(timelines) {
+    dayLineContainer.innerHTML = '<div class="hour-timeline"></div>'; // Clear existing lines and reset hour timeline
+
+
+    Object.keys(timelines).forEach(day => {
+        let lastClockIn = null; // Track the last clock-in event
+
+        timelines[day].forEach((session, index) => {
+            const { clockIn, clockOut, note } = session;
+
+            if (clockIn && clockOut) {
+                addDayLine(day, clockIn, clockOut, note, index);
+            } else if (clockIn && !clockOut) {
+                lastClockIn = session;
+            }
+        });
+
+        // Handle the current time block if it exists
+        if (lastClockIn) {
+            addDayLine(day, lastClockIn.clockIn, new Date(), lastClockIn.note, timelines[day].length - 1, true);
+        }
+    });
+}
+
+
+function updateBarChart(data) {
+    const { minutesWorked, earnings, dayLabels } = data;
+    const maxMinutes = Math.max(...Object.values(minutesWorked));
+    const minHeight = 2;
+
+    // Clear the current chart container before re-populating it
+    chartContainer.innerHTML = '';
+
+    dayLabels.forEach(day => {
+        const minutes = Math.round(minutesWorked[day]);
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        const earningsForDay = earnings[day].toFixed(2); // Format earnings to 2 decimal places
+
+        const barHeightPercentage = (minutes / maxMinutes) * 100;
+        const barHeight = `${Math.max(barHeightPercentage, minHeight)}%`;
+
+        const newBar = document.createElement('div');
+        newBar.className = 'bar';
+        newBar.style.height = barHeight;
+        newBar.setAttribute('data-day', day);
+
+        const barValue = document.createElement('div');
+        barValue.className = 'bar-value';
+        barValue.textContent = `${hours}:${remainingMinutes < 10 ? '0' + remainingMinutes : remainingMinutes} - $${earningsForDay}`;
+
+        const barLabel = document.createElement('div');
+        barLabel.className = 'bar-label';
+        barLabel.textContent = day;
+
+        newBar.appendChild(barValue);
+        newBar.appendChild(barLabel);
+        chartContainer.appendChild(newBar);
+    });
+}
+
+async function init() {
+    initializeContainers();
+    const rawData = await fetchData();
+    const processedData = processData(rawData);
+
+    const currentClockInSession = findCurrentClockInSession(processedData.timelines);
+    if (currentClockInSession) {
+        const { day, clockIn, note } = currentClockInSession;
+        currentTimeBlock = {
+            element: addDayLine(day, clockIn, new Date(), note, 'current', true),
+            clockIn: clockIn
+        };
+        currentTimeBlock.element.classList.add('current');
+        updateCurrentTimeBlock();
+        startEarningsUpdateInterval();
+    }
+
+    updateDayLines(processedData.timelines);
+    updateBarChart(processedData);
+    createHourTimeline();
+    calculateAndDisplayTotals(processedData);
+}
+
+async function updateRealTimeData() {
+    if (!currentTimeBlock) return;
+
+    const rawData = await fetchData();
+    const processedData = processData(rawData);
+
+    updateCurrentTimeBlock();
+    calculateAndDisplayTotals(processedData);
+}
+
+function findCurrentClockInSession(timelines) {
+    const today = new Date().toISOString().split('T')[0];
+    const todaySessions = timelines[today] || [];
+
+    for (const session of todaySessions) {
+        if (session.clockIn && !session.clockOut) {
+            return { day: today, ...session };
+        }
+    }
+
+    return null;
+}
+
+function setStatus(status, lastTime) {
+    const statusElement = document.getElementById('status');
+
+    if (status === "Clocked in") {
+        statusElement.textContent = `Clocked in at ${formatTimeForDisplay(lastTime)}`;
+        statusElement.className = 'clocked-in';
+    } else if (status === "Clocked out" && lastTime) {
+        statusElement.textContent = `Clocked out at ${formatTimeForDisplay(lastTime)}`;
+        statusElement.className = 'clocked-out';
+    } else {
+        statusElement.textContent = `Clocked out`;
+        statusElement.className = 'clocked-out';
+    }
+}
+
+async function clockIn() {
+    const note = document.getElementById('note').value;
+    const response = await fetch('/clock_in', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            note: note
+        })
+    });
+    const data = await response.json();
+    if (data.status === "Error") {
+        messageQueue.addMessage(data.message, true);
+    } else {
+        const startTime = new Date(data.time);
+        setStatus("Clocked in", data.time);
+        messageQueue.addMessage(`Clocked in at ${formatTimeForDisplay(data.time)} with note: "${note}"`);
+        const today = new Date().toISOString().split('T')[0];
+        currentTimeBlock = {
+            element: addDayLine(today, startTime, new Date(), note, 'current', true),
+            clockIn: startTime
+        };
+        currentTimeBlock.element.classList.add('current');
+        updateCurrentTimeBlock();
+
+        startEarningsUpdateInterval();  // Start updating earnings and time
+    }
+}
+
+// Function to clock out
+async function clockOut() {
+    const note = document.getElementById('note').value;
+    const response = await fetch('/clock_out', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            note: note
+        })
+    });
+    const data = await response.json();
+    
+    if (data.status === "Error") {
+        messageQueue.addMessage(data.message, true);
+    } else {
+        setStatus("Clocked out", data.time);
+        messageQueue.addMessage(`Clocked out at ${formatTimeForDisplay(data.time)} with note: "${note}"`);
+        
+        // Ensure any existing '.time-block.current' has its '.current' class removed
+        const currentBlock = document.querySelector('.time-block.current');
+        if (currentBlock) {
+            currentBlock.classList.remove('current');
+        }
+        
+        if (currentTimeBlock) {
+            currentTimeBlock.element.style.width = `${(new Date() - currentTimeBlock.clockIn) / 1000 / 60 / 60 / 24 * 100}%`;
+            currentTimeBlock = null;
+        }
+        
+        stopEarningsUpdateInterval();  // Stop updating earnings and time
+    }
+}
+
+
+// Function to start the interval for updating real-time data
+function startEarningsUpdateInterval() {
+    if (earningsUpdateInterval) {
+        clearInterval(earningsUpdateInterval);
+    }
+
+    earningsUpdateInterval = setInterval(updateCurrentTimeBlock, 60000);  // Update every minute
+}
+function stopEarningsUpdateInterval() {
+    if (earningsUpdateInterval) {
+        clearInterval(earningsUpdateInterval);
+        earningsUpdateInterval = null;
+    }
+}
+function formatTimeForDisplay(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    return `${hours}:${minutes} ${ampm}`;
+}
+
+// Initial call to setStatus on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const status = "{{ status }}";
+    const lastTime = "{{ last_time }}";
+    setStatus(status, lastTime);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    init();  // Initialize the chart and data fetching on page load
+});
+// Function to run on window resize
+function onResize() {
+    createHourTimeline();
+}
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return weekNo;
+}
+// Attach the resize event listener to the window
+window.addEventListener('resize', onResize);
+
+// Initial call to createHourTimeline to set it up on page load
+document.addEventListener('DOMContentLoaded', () => {
+    createHourTimeline(); // Initialize the hour markers when the page loads
+});
+async function calculateAndDisplayTotals() {
+    const rawData = await fetchData();  // Fetch the data
+    const data = processData(rawData);  // Process the data
+
+    const { minutesWorked, earnings, dayLabels } = data;  // Extract data
+    const weeklyTotals = {};
+    let overallMinutes = 0;
+    let overallEarnings = 0;
+    const today = new Date();
+    const currentWeekNumber = getWeekNumber(today);
+
+    dayLabels.forEach(day => {
+        const weekNumber = getWeekNumber(new Date(day));
+        if (!weeklyTotals[weekNumber]) {
+            weeklyTotals[weekNumber] = { minutes: 0, earnings: 0, isComplete: false, days: {} };
+        }
+        weeklyTotals[weekNumber].minutes += minutesWorked[day] || 0;
+        weeklyTotals[weekNumber].earnings += earnings[day] || 0;
+        overallMinutes += minutesWorked[day] || 0;
+        overallEarnings += earnings[day] || 0;
+
+        // Track daily totals within the week
+        weeklyTotals[weekNumber].days[day] = {
+            minutes: minutesWorked[day] || 0,
+            earnings: earnings[day] || 0
+        };
+    });
+
+    // Ensure the current week is initialized
+    if (!weeklyTotals[currentWeekNumber]) {
+        weeklyTotals[currentWeekNumber] = { minutes: 0, earnings: 0, isComplete: false, days: {} };
+    }
+
+    // Add current session if clocked in
+    if (currentTimeBlock) {  // Check if the user is clocked in
+        const currentSessionMinutes = (today - currentTimeBlock.clockIn) / (1000 * 60);
+        const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
+        const currentSessionEarnings = (currentSessionMinutes / 60) * payRate;
+
+        weeklyTotals[currentWeekNumber].minutes += currentSessionMinutes;
+        weeklyTotals[currentWeekNumber].earnings += currentSessionEarnings;
+        overallMinutes += currentSessionMinutes;
+        overallEarnings += currentSessionEarnings;
+    }
+
+    // Mark the current week as incomplete unless it's Sunday
+    weeklyTotals[currentWeekNumber].isComplete = today.getDay() === 0;
+
+    // Pass properly calculated totals to displayTotals
+    displayTotals(weeklyTotals, overallMinutes, overallEarnings);
+}
+
+
+function displayTotals(weeklyTotals, overallMinutes, overallEarnings) {
+    const dailyTotalsContainer = document.getElementById('daily-totals'); // Daily totals container
+    const weeklyTotalsContainer = document.getElementById('weekly-totals'); // Weekly totals container
+    const overallTotalsContainer = document.getElementById('overall-totals'); // Overall totals container
+
+    dailyTotalsContainer.innerHTML = ''; // Clear previous daily totals
+    weeklyTotalsContainer.innerHTML = ''; // Clear previous weekly totals
+
+    const rawData = Object.entries(weeklyTotals); // Convert the weekly totals object to an array of entries
+
+    dailyTotalsContainer.innerHTML += `<div style="color: var(--secondary-color)">Daily Totals:</div>`;
+    
+    // Display daily totals
+    for (const week in weeklyTotals) {
+        const { days } = weeklyTotals[week]; // Extract daily data for the week
+        for (const day in days) {
+            const minutes = days[day].minutes;
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = Math.round(minutes % 60);
+            const earningsFormatted = days[day].earnings.toFixed(2);
+            
+            const dailyTotalDiv = document.createElement('div');
+            dailyTotalDiv.textContent = `Date ${day}: ${hours}h ${remainingMinutes}m - $${earningsFormatted}`;
+            dailyTotalsContainer.appendChild(dailyTotalDiv);
+        }
+    }
+
+    // Display weekly totals
+    weeklyTotalsContainer.innerHTML = `<div style="color: var(--secondary-color)">Weekly Totals:</div>`;
+    for (const week in weeklyTotals) {
+        const { minutes, earnings, isComplete } = weeklyTotals[week];
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = Math.round(minutes % 60);
+        const earningsFormatted = earnings.toFixed(2);
+
+        const weekTotal = document.createElement('div');
+        weekTotal.className = `week-total ${isComplete ? 'complete-week' : 'incomplete-week'}`;
+        weekTotal.textContent = `Week ${week}: ${hours}h ${remainingMinutes}m - $${earningsFormatted} ${isComplete ? '' : ''}`;
+        weeklyTotalsContainer.appendChild(weekTotal);
+    }
+
+    // Display overall totals
+    const overallHours = Math.floor(overallMinutes / 60);
+    const overallRemainingMinutes = Math.round(overallMinutes % 60);
+    const overallEarningsFormatted = overallEarnings.toFixed(2);
+
+    overallTotalsContainer.innerHTML = `Total: ${overallHours}h ${overallRemainingMinutes}m - $${overallEarningsFormatted}`;
+}
+
+</script>
+
+</body>
+</html>
