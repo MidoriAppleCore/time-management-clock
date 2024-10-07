@@ -305,10 +305,9 @@ h2 {
     background: var(--accent-color);
     padding: 20px;
     max-width: 600px;
-    border-top-left-radius: 10px;
 
     position: absolute;
-    right: 0;
+    left: 0;
     bottom: 0;
 }
 
@@ -355,7 +354,7 @@ h2 {
 
 <div class="container-pay-rate">
     <label for="pay-rate">Pay Rate (per hour):</label>
-    <input type="number" id="pay-rate" name="pay-rate" placeholder="Enter pay rate..." step="0.01">
+    <input type="number" id="pay-rate" name="pay-rate" value="21" step="0.01">
 </div>
 
 <body><div class="container">
@@ -513,7 +512,7 @@ function addDayLine(day, startTime, endTime, note, index, isCurrent = false) {
         timeBlock.classList.add('current');
     }
 
-    const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
+    const payRate = parseFloat(document.getElementById('pay-rate').value) || 21.0;
     const durationInMinutes = (endTime - startTime) / (1000 * 60);
     const earnings = ((durationInMinutes / 60) * payRate).toFixed(2);
 

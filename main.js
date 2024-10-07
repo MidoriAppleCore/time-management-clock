@@ -2,21 +2,22 @@ const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
 const http = require('http');
 
+let flaskProcess; // Reference to the Flask process
+
 function createWindow() {
     const win = new BrowserWindow({
-        width: 800,
+        width: 1000,
         height: 600,
         webPreferences: {
             nodeIntegration: true
         },
-        autoHideMenuBar: true // Hide the menu bar
+        autoHideMenuBar: true
     });
 
-    // Optionally completely disable the menu bar visibility
     win.setMenuBarVisibility(false);
 
     // Start the Flask app using spawn
-    const flaskProcess = spawn('python3', ['./app.py']);
+    flaskProcess = spawn('python3', ['./app.py']);
 
     flaskProcess.stdout.on('data', (data) => {
         console.log(`Flask app stdout: ${data}`);
@@ -41,13 +42,27 @@ function createWindow() {
     };
 
     checkServer(); // Start checking if the server is up
+
+    // When the Electron window is closed, kill the Flask process
+    win.on('closed', () => {
+        if (flaskProcess) {
+            flaskProcess.kill('SIGTERM'); // Gracefully terminate the Flask process
+        }
+    });
 }
 
 app.whenReady().then(createWindow);
 
+// Quit the Flask process when all windows are closed
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
+    }
+});
+
+app.on('quit', () => {
+    if (flaskProcess) {
+        flaskProcess.kill('SIGTERM'); // Gracefully terminate the Flask process on app quit
     }
 });
 
