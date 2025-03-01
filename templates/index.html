@@ -2,248 +2,335 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Tracker</title>
     <style>
 :root {
-    --primary-color: #ce2626; /* Deep teal */
-    --secondary-color: #E63946; /* Vivid coral red */
-    --background-color: #cccccc; /* Soft off-white */
-    --text-color: #1D1F21; /* Very dark charcoal */
-    --accent-color: #fefefe; /* Soft mint blue */
-    --border-color: #D3D3D3; /* Soft light grey for borders */
+    /* Light on Dark Nice Color Scheme (Blackish Dark) */
+    --primary-color: #FFB703; /* Vibrant Sunrise Orange */
+    --secondary-color: #8ECAE6; /* Soft Blue */
+    --accent-color: #219EBC; /* Bright Blue */
+    --background-color: #1A1A1A; /* Blackish Dark */
+    --card-background: rgba(26, 26, 26, 0.8); /* Blackish with transparency */
+    --text-color: #F0F0F0; /* Light Gray */
+    --muted-text: #9CA3AF; /* Medium Gray */
+    --border-color: #2B2B2B; /* Subtle Dark Border */
+    --error-color: #E76F51; /* Muted Red */
+    --success-color: #2A9D8F; /* Calm Green */
+    --warning-color: #E9C46A; /* Warm Yellow */
+    --border-radius: 0px; /* Do not change */
+    --transition-speed: 0.3s;
+    --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    /* Wallpaper Background Support */
+    --wallpaper-overlay: rgba(26, 26, 26, 0.85); /* Dark overlay for wallpaper */
+}
 
+
+* {
+    box-sizing: border-box;
 }
 
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: var(--font-family);
     color: var(--text-color);
     margin: 0;
     padding: 0;
+    background: var(--wallpaper-overlay) url('https://w.wallhaven.cc/full/85/wallhaven-85lz3k.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    height: 100vh;
-    background: var(--border-color);
 }
 
 h1 {
     color: var(--primary-color);
-    font-size: 2rem;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--secondary-color);
-    padding-bottom: 10px;
-    text-transform: none;
-    letter-spacing: normal;
+    font-size: 2.5rem;
+    margin: 40px 0;
+    font-weight: 700;
+}
+
+/* Containers with a subtle glass effect */
+.container-pay-rate,
+.container {
+    background: var(--card-background);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+    backdrop-filter: blur(5px);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+}
+
+.container-pay-rate {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    color: var(--text-color);
 }
 
 .container {
+    position: absolute;
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    background: var(--accent-color);
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    width: 100%;
-    max-width: 600px;
+    padding: 40px;
+    right: 15px;
+    top: -15px;
+    width: 25%;
+    margin-right: 15%;
 }
 
-.container label, .container input {
-    margin-right: 12px;
-    color: var(--text-color);
+label {
     font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
 }
 
-input[type="text"] {
-    padding: 10px;
+input[type="text"],
+input[type="number"],
+input[type="email"],
+textarea {
+    min-width: 200px;
+    margin: 0 10px;
+    padding: 12px 16px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     font-size: 1rem;
-    width: 300px;
-    background: #ffffff;
+    width: 100%;
+    max-width: 300px;
+    background: #FAFAFA;
     color: var(--text-color);
-    transition: border-color 0.3s ease;
-    outline: none;
+    transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
-input[type="text"]:focus {
+input::placeholder,
+textarea::placeholder {
+    color: var(--muted-text);
+}
+
+input:focus,
+textarea:focus {
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
     outline: none;
 }
 
 button {
-    padding: 10px 20px;
-    margin-left: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius);
     font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
     background: var(--primary-color);
     color: #ffffff;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
+    margin-right: 20px;
 }
 
 button:hover {
     background: var(--secondary-color);
-    border-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 #status {
-    font-weight: bold;
-    font-size: 1rem;
-    margin-left: 20px;
-    width: 220px;
-    display: inline-block;
-    text-align: left;
+    font-weight: 600;
+    font-size: 1.1rem;
     color: var(--text-color);
+    text-align: left;
+    min-width: 220px;
 }
 
 #status.clocked-in {
-    color: var(--primary-color);
+    color: var(--success-color);
 }
 
 #status.clocked-out {
-    color: var(--secondary-color);
+    color: var(--error-color);
 }
 
 .message {
     position: fixed;
-    bottom: -100px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--accent-color);
+    background: var(--card-background);
     color: var(--text-color);
-    padding: 15px 25px;
-    border-radius: 4px;
+    padding: 20px 30px;
+    border-radius: var(--border-radius);
     font-size: 1rem;
     opacity: 0;
-    transition: all 0.5s ease;
+    transition: opacity var(--transition-speed) ease;
     z-index: 1000;
-    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: none;
 }
 
 .message.show {
-    bottom: 30px;
     opacity: 1;
-}
-
-h2 {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    text-transform: none;
+    display: block;
 }
 
 .chart-wrapper {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
     width: 90%;
-    margin-top: 20px;
+    margin-top: 40px;
+    gap: 50px;
+    align-items: center;
 }
 
-.chart-wrapper > * {
-    background-color: #ffffff;
-    padding: 10px;
-    flex-direction: row;
-}
-
-
-.chart-container {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    height: 200px;
-    margin: 0;
-}
-
-.day-line-container {
-    width: 80%;
-    overflow-x: hidden;
+.day-line-container,
+.totals-container {
+    background: var(--card-background);
     padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 100%;
+    position: relative;
+}
+
+.totals-container h3 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 700;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+
+th,
+td {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
     background-color: var(--background-color);
-    box-sizing: border-box;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.hour-timeline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    height: 25px;
+    margin-bottom: 50px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hour-marker {
+    position: absolute;
+    top: -35px;
+    transform: translateX(-50%) rotate(-90deg);
+    white-space: nowrap;
+    font-size: 0.8rem;
+    z-index: 200;
 }
 
 .day-line {
     position: relative;
     width: 100%;
-    height: 20px;
-    background-color: var(--accent-color);
-    margin-bottom: 5px;
-    border-radius: 0px;
+    height: 25px;
+    background: var(--background-color);
+    margin-bottom: 15px;
+    border-radius: var(--border-radius);
 }
 
 .day-label {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 6px;
-    font-size: 1rem;
+    left: -28px;
+    margin-top: 3.5px;
+    font-size: 1.1rem;
     color: var(--text-color);
-    z-index: 3;
-    pointer-events: none;
+    width: 130px;
+    text-align: right;
+    font-weight: 600;
+    z-index: 4;
 }
 
 .time-block {
     position: absolute;
-    height: 20px;
+    height: 100%;
     background: var(--primary-color);
-    border-radius: 0px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity var(--transition-speed) ease, background var(--transition-speed) ease;
+}
+
+.time-block:hover {
+    opacity: 1;
+    background: var(--secondary-color);
 }
 
 .time-block.highlighted {
     background: var(--secondary-color);
 }
 
-.time-block.current {
-    border-radius: 4px;
-    background: var(--secondary-color);
-    transition: width 1s linear;
-}
-
-.show {
-    opacity: 1;
-}
-
-.hour-timeline {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    font-size: 0.8rem;
+.tooltip {
+    position: absolute;
+    padding: 12px 18px;
+    background-color: var(--card-background);
     color: var(--text-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease-in-out;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: none;
 }
 
-.hour-marker {
-    width: 0;
-    margin-top: 5px;
-    text-align: center;
-    transform: rotate(-45deg);
-    pointer-events: none;
+.tooltip.show {
+    opacity: 1;
+    display: block;
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 1200px;
+    background: var(--card-background);
+    padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .bar {
     flex: 1;
-    margin: 0 6px;
+    margin: 0 12px;
     background: var(--primary-color);
-    text-align: center;
     color: #ffffff;
-    border-radius: 4px 4px 0 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    min-height: 45px;
+    min-height: 60px;
     position: relative;
-    width: 150px;
-    transition: background-color 0.3s ease;
-
-
-    display: none;
+    width: 200px;
+    transition: background-color var(--transition-speed) ease;
+    cursor: pointer;
 }
 
 .bar:hover {
@@ -251,770 +338,921 @@ h2 {
 }
 
 .bar-label {
-    margin-top: 5px;
-    font-size: 18px;
-    padding: 8px;
+    margin-top: 12px;
+    font-size: 1.2rem;
+    padding: 10px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    text-align: center;
+    font-weight: 600;
 }
 
 .bar-value {
-    margin-left: 5px;
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    background: rgba(30, 144, 255, 0.9);
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    color: #fff;
+    display: none;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
-.tooltip {
-    position: absolute;
-    padding: 10px 14px;
-    background-color: var(--accent-color);
+.bar:hover .bar-value {
+    display: block;
+}
+
+/* Table Styles for Totals */
+.totals-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.totals-container th,
+.totals-container td {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.totals-container th {
+    background-color: var(--background-color);
     color: var(--text-color);
-    border-radius: 4px;
-    font-size: 0.9rem;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    z-index: 1000;
-    border: 1px solid var(--border-color);
+    font-weight: 600;
 }
 
-@keyframes move-tooltip {
-    from {
-        transform: translate(0, 0);
-    }
-    to {
-        transform: translate(var(--tooltip-x), var(--tooltip-y));
-    }
+.totals-container tr:nth-child(even) {
+    background-color: var(--card-background);
 }
 
-.tooltip.animate {
-    opacity: 1;
-    animation: move-tooltip 0.3s ease-out forwards;
+.totals-container tr:hover {
+    background-color: var(--secondary-color);
 }
-.container-pay-rate {
+
+/* Notes Styling */
+.notes-list {
+    font-style: normal;
+    color: var(--muted-text);
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+/* Input Forms for Sender and Recipient */
+.info-forms {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--accent-color);
+    justify-content: space-between;
+    width: 90%;
+    margin-top: 40px;
+}
+
+.info-form {
+    width: 45%;
+    background: var(--card-background);
     padding: 20px;
-    max-width: 600px;
-
-    position: absolute;
-    left: 0;
-    bottom: 0;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.container-pay-rate label {
-    margin-right: 12px;
-    color: var(--text-color);
-    font-size: 1rem;
+.info-form h2 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-weight: 700;
 }
 
-.container-pay-rate input[type="number"] {
-    padding: 10px;
+.info-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.info-form input,
+.info-form textarea {
+    margin-bottom: 15px;
+}
+
+/* Sender and Recipient Blocks */
+.sender-recipient-blocks {
+    display: none;
+    width: 90%;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.sender-block,
+.recipient-block {
+    width: 45%;
+    background: var(--card-background);
+    padding: 20px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 1rem;
-    width: 150px;
-    background: #ffffff;
-    color: var(--text-color);
-    transition: border-color 0.3s ease;
-    outline: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.container-pay-rate input[type="number"]:focus {
-    border-color: var(--primary-color);
-    outline: none;
+.sender-block h2,
+.recipient-block h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: var(--primary-color);
 }
 
-.totals-container {
-
+.sender-block p,
+.recipient-block p {
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-line;
 }
 
-.totals-container div {
-    font-size: 1.2rem; /* Larger font size for readability */
-    color: var(--text-color); /* Use the standard text color */
-    margin-bottom: 4px; /* Space between lines */
-    padding: 4px; /* Padding for individual items */
-    transition: transform 0.2s ease; /* Smooth hover effect */
+/* Enhanced Print Styles */
+@media print {
+    /* Hide elements not needed in print */
+    .day-line-container,
+    .chart-wrapper .container,
+    .container,
+    .container-pay-rate,
+    #error-message,
+    #tooltip,
+    .message,
+    button,
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    textarea,
+    .info-forms,
+    h1 {
+        display: none !important;
+    }
 
-    padding-bottom: 32.5px;
+    body {
+        background: #fff;
+        margin: 0;
+        padding: 0;
+    }
+
+    .sender-recipient-blocks {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .sender-block,
+    .recipient-block {
+        width: 45%;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        background: none;
+    }
+
+    .sender-block h2,
+    .recipient-block h2 {
+        color: var(--text-color);
+    }
+    th {
+        display: none;
+    }
+    th:nth-child(1) {
+        display: auto;
+    }
+    .pagebreak { page-break-before: always; } /* page-break-after works, as well */
+
+    .totals-container {
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+    h3 {
+        display: none;
+    }
+    #overall-totals-table:before {
+        content: "Amount Due: ";
+        font-size: 1.5em;
+    }
+    #weekly-totals-table:before {
+        content: "Weekly Totals: ";
+        font-size: 1.5em;
+    }
+    #daily-totals-table:before {
+        content: "Daily Totals: ";
+        font-size: 1.5em;
+    }
+    table tr td:nth-child(2) {
+        white-space: nowrap;
+    }
 }
-
 
     </style>
-</head>    
-
-<div class="container-pay-rate">
-    <label for="pay-rate">Pay Rate (per hour):</label>
-    <input type="number" id="pay-rate" name="pay-rate" value="21" step="0.01">
-</div>
-
-<body><div class="container">
-    <label for="note">Note:</label>
-    <input type="text" id="note" name="note" placeholder="Enter note...">
-    <button onclick="clockIn()">Clock In</button>
-    <button onclick="clockOut()">Clock Out</button>
-    <span id="status" class="clocked-out">Clocked out</span>
-
-</div>
-
-<div id="error-message" class="message"></div>
-<div class="chart-wrapper">
-    <div class="day-line-container">
-        <div class="hour-timeline"></div>
-    </div>      
-    
-    <div class="totals-container">
-        <h3>Totals</h3>
-        <div id="daily-totals"></div>
-        <div id="weekly-totals"></div>
-        <div id="overall-totals"></div>
+</head>
+<body>
+    <!-- Sender and Recipient Blocks -->
+    <div class="sender-recipient-blocks">
+        <div class="sender-block">
+            <h2>Sender Information</h2>
+            <p id="sender-info-display"></p>
+        </div>
+        <div class="recipient-block">
+            <h2>Recipient Information</h2>
+            <p id="recipient-info-display"></p>
+        </div>
     </div>
-    
-</div>  
-<div class="chart-container">
-</div>
-<div id="tooltip" class="tooltip"></div>
 
-<script>
-let chartContainer;
-let dayLineContainer;
-let currentTimeBlock = null;
-let earningsUpdateInterval;
+    <h1>Time Tracker</h1>
 
-// Initialize chartContainer and dayLineContainer references
-function initializeContainers() {
-    chartContainer = document.querySelector('.chart-container');
-    dayLineContainer = document.querySelector('.day-line-container');
-}
+    <div class="container-pay-rate">
+        <label for="pay-rate">Pay Rate (per hour):</label>
+        <input type="number" id="pay-rate" name="pay-rate" value="21" step="0.01">
+    </div>
 
-class MessageQueue {
-    constructor() {
-        this.queue = [];
-        this.isProcessing = false;
-        this.baseDuration = 1500;
-        this.minDuration = 500;
-    }
+    <div class="container">
+        <label for="note">Note:</label>
+        <input type="text" id="note" name="note" placeholder="Enter note...">
+        <button onclick="clockIn()" aria-label="Clock In">Clock In</button>
+        <button onclick="clockOut()" aria-label="Clock Out">Clock Out</button>
+        <span id="status" class="clocked-out">Clocked out</span>
+    </div>
 
-    addMessage(message, isError = false) {
-        return new Promise((resolve) => {
-            this.queue.push({ message, isError, resolve });
-            this.processQueue();
-        });
-    }
+    <div id="error-message" class="message"></div>
 
-    async processQueue() {
-        if (this.isProcessing || this.queue.length === 0) return;
+    <div class="chart-wrapper">
+        <div class="day-line-container">
+            <div class="hour-timeline">
+                <!-- Hour markers will be positioned absolutely within this container -->
+            </div>
+            <!-- Day lines will be appended here -->
+        </div>      
 
-        this.isProcessing = true;
-        const { message, isError, resolve } = this.queue.shift();
+        <div class="totals-container">
+            <h3>Totals</h3>
+            <table id="daily-totals-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Hours Worked</th>
+                        <th>Earnings ($)</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Daily totals will be inserted here -->
+                </tbody>
+            </table>
 
-        const adjustedDuration = this.calculateDuration(this.queue.length);
+            <div class="pagebreak"></div>
+            <table id="weekly-totals-table">
+                <thead>
+                    <tr>
+                        <th>Week Number</th>
+                        <th>Hours Worked</th>
+                        <th>Earnings ($)</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Weekly totals will be inserted here -->
+                </tbody>
+            </table>
+            <div class="pagebreak"></div>
+            <table id="overall-totals-table">
+                <thead>
+                    <tr>
+                        <th>Total Hours Worked</th>
+                        <th>Total Earnings ($)</th>
+                        <th>All Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="overall-hours">0h 0m</td>
+                        <td id="overall-earnings">$0.00</td>
+                        <td id="overall-notes" class="notes-list">N/A</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>  
 
-        await this.showMessage(message, isError, adjustedDuration);
+    <!-- Input Forms for Sender and Recipient -->
+    <div class="info-forms">
+        <div class="info-form">
+            <h2>Sender Information</h2>
+            <label for="sender-name">Name of Company:</label>
+            <input type="text" id="sender-name" placeholder="Company Name">
+            <label for="sender-address1">Address Line 1:</label>
+            <input type="text" id="sender-address1" placeholder="Address Line 1">
+            <label for="sender-address2">Address Line 2:</label>
+            <input type="text" id="sender-address2" placeholder="Address Line 2">
+            <label for="sender-phone">Phone:</label>
+            <input type="text" id="sender-phone" placeholder="Phone Number">
+            <label for="sender-email">Email:</label>
+            <input type="email" id="sender-email" placeholder="Email">
+        </div>
+        <div class="info-form">
+            <h2>Recipient Information</h2>
+            <label for="recipient-name">Name of Company:</label>
+            <input type="text" id="recipient-name" placeholder="Company Name">
+            <label for="recipient-address1">Address Line 1:</label>
+            <input type="text" id="recipient-address1" placeholder="Address Line 1">
+            <label for="recipient-address2">Address Line 2:</label>
+            <input type="text" id="recipient-address2" placeholder="Address Line 2">
+            <label for="recipient-phone">Phone:</label>
+            <input type="text" id="recipient-phone" placeholder="Phone Number">
+            <label for="recipient-email">Email:</label>
+            <input type="email" id="recipient-email" placeholder="Email">
+        </div>
+    </div>
 
-        resolve();
-        this.isProcessing = false;
-        this.processQueue();
-    }
+    <div id="tooltip" class="tooltip"></div>
 
-    calculateDuration(queueLength) {
-        const speedMultiplier = 0.5 ** (queueLength / 2);
-        const duration = this.baseDuration * speedMultiplier;
-        return Math.max(this.minDuration, duration);
-    }
+    <script>
+        let chartContainer;
+        let dayLineContainer;
+        let currentTimeBlock = null;
 
-    async showMessage(message, isError, duration) {
-        return new Promise((resolve) => {
+        // Initialize containers
+        function initializeContainers() {
+            dayLineContainer = document.querySelector('.day-line-container');
+        }
+
+        // Create Hour Timeline
+        function createHourTimeline() {
+            const hourTimeline = document.querySelector('.hour-timeline');
+            hourTimeline.innerHTML = '';
+            for (let i = 0; i <= 24; i++) {
+                const marker = document.createElement('div');
+                marker.className = 'hour-marker';
+                marker.style.left = `${(i / 24) * 100}%`;
+                marker.textContent = i < 24 ? formatHour(i) : '';
+                hourTimeline.appendChild(marker);
+            }
+        }
+
+        // Format hour for timeline
+        function formatHour(hour) {
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+            return `${formattedHour} ${ampm}`;
+        }
+
+        // Find Current Clock-In Session
+        function findCurrentClockInSession(timelines) {
+            // Iterate over all days to find any ongoing sessions
+            for (const day in timelines) {
+                const sessions = timelines[day];
+                for (const session of sessions) {
+                    if (session.clockIn && !session.clockOut) {
+                        return { day: day, ...session };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Add Day Line
+        function addDayLine(day, startTime, endTime, note, isCurrent = false) {
+            let dayLine = document.getElementById(`day-line-${day}`);
+            if (!dayLine) {
+                dayLine = document.createElement('div');
+                dayLine.className = 'day-line';
+                dayLine.id = `day-line-${day}`;
+                dayLineContainer.appendChild(dayLine);
+
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'day-label';
+                dayLabel.textContent = day;
+                dayLine.appendChild(dayLabel);
+            }
+
+            const startPercent = (startTime.getHours() + startTime.getMinutes() / 60) / 24 * 100;
+            const endPercent = endTime ? (endTime.getHours() + endTime.getMinutes() / 60) / 24 * 100 : (new Date().getHours() + new Date().getMinutes() / 60) / 24 * 100;
+
+            const timeBlock = document.createElement('div');
+            timeBlock.className = 'time-block' + (isCurrent ? ' highlighted' : '');
+            timeBlock.style.left = `${startPercent}%`;
+            timeBlock.style.width = `${endPercent - startPercent}%`;
+            timeBlock.title = `Note: ${note || 'N/A'}\nStart: ${formatTimeForDisplay(startTime)}\nEnd: ${endTime ? formatTimeForDisplay(endTime) : 'Ongoing'}`;
+
+            // Tooltip handling
+            timeBlock.addEventListener('mouseover', (event) => showTooltip(event, note, startTime, endTime));
+            timeBlock.addEventListener('mouseout', hideTooltip);
+
+            dayLine.appendChild(timeBlock);
+
+            return timeBlock;
+        }
+
+        // Show Tooltip
+        function showTooltip(event, note, startTime, endTime) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `Note: ${note || 'N/A'}<br>Start: ${formatTimeForDisplay(startTime)}<br>End: ${endTime ? formatTimeForDisplay(endTime) : 'Ongoing'}`;
+            
+            let tooltipX = event.pageX + 10;
+            let tooltipY = event.pageY + 10;
+
+            // Temporarily display tooltip to get its dimensions
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${tooltipY}px`;
+            tooltip.classList.add('show');
+
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // Adjust position if tooltip goes beyond window boundaries
+            if (tooltipX + tooltipWidth > window.scrollX + windowWidth) {
+                tooltipX = event.pageX - tooltipWidth - 10;
+            }
+
+            if (tooltipY + tooltipHeight > window.scrollY + windowHeight) {
+                tooltipY = event.pageY - tooltipHeight - 10;
+            }
+
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${tooltipY}px`;
+        }
+
+        // Hide Tooltip
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('show');
+            tooltip.style.display = 'none';
+        }
+
+        // Fetch Data from Server
+        async function fetchData() {
+            try {
+                const response = await fetch('/data');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data.');
+                }
+                return await response.json();
+            } catch (error) {
+                showMessage(error.message, true);
+                return [];
+            }
+        }
+
+        // Show Message
+        function showMessage(message, isError = false) {
             const messageBox = document.getElementById('error-message');
             messageBox.textContent = message;
             if (isError) {
-                messageBox.classList.add('error');
+                messageBox.style.backgroundColor = '#f8d7da';
+                messageBox.style.color = '#721c24';
+                messageBox.style.borderColor = '#f5c6cb';
             } else {
-                messageBox.classList.remove('error');
+                messageBox.style.backgroundColor = '#d4edda';
+                messageBox.style.color = '#155724';
+                messageBox.style.borderColor = '#c3e6cb';
             }
-
-            const animationDuration = Math.min(500, duration / 2);
-            messageBox.style.transition = `all ${animationDuration}ms ease`;
-
             messageBox.classList.add('show');
-
             setTimeout(() => {
                 messageBox.classList.remove('show');
-                setTimeout(resolve, animationDuration);
-            }, duration - animationDuration);
-        });
-    }
-}
-
-// Instantiate the message queue
-const messageQueue = new MessageQueue();
-function createHourTimeline() {
-    const hours = Array.from({ length: 25 }, (_, i) => i);
-    const hourTimeline = document.querySelector('.hour-timeline');
-    const dayLineWidth = document.querySelector('.day-line').offsetWidth;
-
-    hourTimeline.style.width = `${dayLineWidth}px`;
-    hourTimeline.innerHTML = '';
-
-    hours.forEach((hour, index) => {
-        const hourMarker = document.createElement('div');
-        hourMarker.className = 'hour-marker';
-
-        // Calculate left position
-        hourMarker.style.left = `${(hour / 24) * 100}%`;
-
-        // Set text content for the hour marker, making the last one blank
-        if (index < hours.length - 1) {
-            hourMarker.textContent = `${hour % 12 === 0 ? 12 : hour % 12}${hour < 12 ? 'AM' : 'PM'}`;
-        } else {
-            hourMarker.textContent = ''; // Last marker is blank
+            }, 3000);
         }
 
-        hourTimeline.appendChild(hourMarker);
-    });
-}
-
-
-// Modify the addDayLine function to include earnings in the tooltip
-function addDayLine(day, startTime, endTime, note, index, isCurrent = false) {
-    let dayLine = document.getElementById(`day-line-${day}`);
-    if (!dayLine) {
-        dayLine = document.createElement('div');
-        dayLine.className = 'day-line';
-        dayLine.id = `day-line-${day}`;
-        dayLineContainer.appendChild(dayLine);
-
-        const dayLabel = document.createElement('div');
-        dayLabel.className = 'day-label';
-        dayLabel.textContent = day;
-        dayLine.appendChild(dayLabel);
-    }
-
-    const startPercent = (startTime.getHours() + startTime.getMinutes() / 60) / 24 * 100;
-    const endPercent = (endTime.getHours() + endTime.getMinutes() / 60) / 24 * 100;
-
-    const timeBlock = document.createElement('div');
-    timeBlock.className = 'time-block';
-    timeBlock.style.left = `${startPercent}%`;
-    timeBlock.style.width = `${endPercent - startPercent}%`;
-    timeBlock.dataset.index = index;
-
-    if (isCurrent) {
-        timeBlock.classList.add('current');
-    }
-
-    const payRate = parseFloat(document.getElementById('pay-rate').value) || 21.0;
-    const durationInMinutes = (endTime - startTime) / (1000 * 60);
-    const earnings = ((durationInMinutes / 60) * payRate).toFixed(2);
-
-    let tooltip = document.getElementById('tooltip');
-    let targetX = 0;
-    let targetY = 0;
-    let tooltipVisible = false;
-
-    function lerp(start, end, t) {
-        return start + t * (end - start);
-    }
-
-    function updateTooltipPosition() {
-        const currentX = parseFloat(tooltip.style.left) || 0;
-        const currentY = parseFloat(tooltip.style.top) || 0;
-
-        const newX = lerp(currentX, targetX, 0.1);
-        const newY = lerp(currentY, targetY, 0.1);
-
-        tooltip.style.left = `${newX}px`;
-        tooltip.style.top = `${newY}px`;
-
-        if (tooltipVisible) {
-            requestAnimationFrame(updateTooltipPosition);
-        }
-    }
-
-    function handleMouseOver(event, note, startTime, endTime, earnings) {
-        tooltipVisible = true;
-
-        // Set tooltip content
-        tooltip.innerHTML = `Note: ${note || 'N/A'}<br>Start: ${formatTimeForDisplay(startTime)}<br>End: ${formatTimeForDisplay(endTime)}<br>Earnings: $${earnings}`;
-
-        targetX = event.pageX + 10;
-        targetY = event.pageY + 10;
-
-        // Set tooltip visibility
-        tooltip.style.opacity = 1;
-
-        // Update tooltip's dataset to reflect if it's the current timespan
-        tooltip.dataset.current = isCurrent ? 'true' : 'false';
-
-        updateTooltipPosition();
-    }
-
-    function handleMouseOut() {
-        tooltipVisible = false;
-        tooltip.style.opacity = 0;
-        tooltip.dataset.current = 'false'; // Reset when mouse leaves
-    }
-
-    timeBlock.addEventListener('mouseover', (event) => handleMouseOver(event, note, startTime, endTime, earnings));
-    timeBlock.addEventListener('mouseout', handleMouseOut);
-    timeBlock.addEventListener('mousemove', (event) => {
-        targetX = event.pageX + 10;
-        targetY = event.pageY + 10;
-    });
-
-    timeBlock.addEventListener('click', () => {
-        document.querySelectorAll('.time-block').forEach(block => block.classList.remove('highlighted'));
-        timeBlock.classList.add('highlighted');
-    });
-
-    dayLine.appendChild(timeBlock);
-
-    return timeBlock;
-}
-
-
-function lerp(start, end, t) {
-    return start + (end - start) * t;
-}
-
-function updateCurrentTimeBlock() {
-    if (!currentTimeBlock) return;
-    const now = new Date();
-    const startTime = currentTimeBlock.clockIn;
-
-    const startPercent = (startTime.getHours() + startTime.getMinutes() / 60) / 24 * 100;
-    const currentPercent = (now.getHours() + now.getMinutes() / 60) / 24 * 100;
-
-    currentTimeBlock.element.style.width = `${currentPercent - startPercent}%`;
-
-    // Calculate real-time earnings
-    const durationInSeconds = (now - startTime) / 1000;
-    const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
-    const earnings = ((durationInSeconds / 3600) * payRate).toFixed(4);
-
-    // Only update the tooltip if the mouse is hovering over the current time block
-    const tooltip = document.getElementById('tooltip');
-    if (tooltip.dataset.current === 'true') {
-        tooltip.innerHTML = `Note: ${currentTimeBlock.note || 'N/A'}<br>Start: ${formatTimeForDisplay(startTime)}<br>Now: ${formatTimeForDisplay(now)}<br>Earnings: $${earnings}`;
-    }
-
-    // Update the totals container with real-time earnings
-    calculateAndDisplayTotals();
-}
-
-
-
-
-// Call this function every minute to update the current time block's width
-//setInterval(updateCurrentTimeBlock, 60000);
-setInterval(updateCurrentTimeBlock, 1000);
-
-
-
-async function fetchData() {
-    const response = await fetch('/data');
-    const data = await response.json();
-    return data;
-}
-
-function processData(data) {
+        // Process Data
+        function processData(data) {
             const timelines = {};
             const minutesWorked = {};
             const earnings = {};
+            const notesPerDay = {};
             const dayLabels = [];
 
-            const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
+            const payRate = parseFloat(document.getElementById('pay-rate').value) || 21.0;
+
+            let openSessions = [];
 
             data.forEach(entry => {
-                const dateString = entry.Time;
-                const [datePart, timePart] = dateString.split(' ');
-                const [year, month, day] = datePart.split('-').map(Number);
-                const [hours, minutes, seconds] = timePart.split(':').map(Number);
-                const date = new Date(year, month - 1, day, hours, minutes, seconds);
-                const localDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                const isoDateString = localDay.toISOString().split('T')[0];
-
-                if (!timelines[isoDateString]) {
-                    timelines[isoDateString] = [];
-                    minutesWorked[isoDateString] = 0;
-                    earnings[isoDateString] = 0;
-                    dayLabels.push(isoDateString);
-                }
+                const date = new Date(entry.Time); // Interpreting as local time
 
                 if (entry.Action === 'Clock In') {
-                    timelines[isoDateString].push({ clockIn: date, clockOut: null, note: entry.Note });
+                    openSessions.push({ clockIn: date, clockOut: null, note: entry.Note });
                 } else if (entry.Action === 'Clock Out') {
-                    const lastSession = timelines[isoDateString].reduce((latest, session) => {
-                        return (!session.clockOut && (!latest || session.clockIn > latest.clockIn)) ? session : latest;
-                    }, null);
-
-                    if (lastSession) {
-                        lastSession.clockOut = date;
-                        const duration = (lastSession.clockOut - lastSession.clockIn) / (1000 * 60); // duration in minutes
-                        minutesWorked[isoDateString] += duration;
-                        earnings[isoDateString] += (duration / 60) * payRate;
+                    if (openSessions.length === 0) {
+                        // Handle error: Clock Out without Clock In
+                        console.warn('Clock Out without Clock In detected.');
+                        return;
                     }
+                    const lastSession = openSessions.pop();
+                    lastSession.clockOut = date;
+
+                    // Split session if it crosses midnight
+                    const sessions = splitSessionAtMidnight(lastSession);
+
+                    sessions.forEach(session => {
+                        const clockInDate = session.clockIn.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+                        const clockOutDate = session.clockOut.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+
+                        // Since sessions are split at midnight, clockInDate and clockOutDate should be the same
+                        const dateString = clockInDate;
+
+                        if (!timelines[dateString]) {
+                            timelines[dateString] = [];
+                            minutesWorked[dateString] = 0;
+                            earnings[dateString] = 0;
+                            notesPerDay[dateString] = new Set();
+                            dayLabels.push(dateString);
+                        }
+
+                        timelines[dateString].push({
+                            clockIn: session.clockIn,
+                            clockOut: session.clockOut,
+                            note: session.note
+                        });
+
+                        const duration = (session.clockOut - session.clockIn) / (1000 * 60); // duration in minutes
+                        minutesWorked[dateString] += duration;
+                        earnings[dateString] += (duration / 60) * payRate;
+                        if (session.note) {
+                            notesPerDay[dateString].add(session.note);
+                        }
+                    });
                 }
             });
 
-            return { timelines, minutesWorked, earnings, dayLabels };
-        }
+            // Handle any open sessions (ongoing sessions without Clock Out)
+            openSessions.forEach(session => {
+                const now = new Date();
 
+                // Split session if it crosses midnight
+                const sessions = splitSessionAtMidnight({ ...session, clockOut: now });
 
-function updateDayLines(timelines) {
-    dayLineContainer.innerHTML = '<div class="hour-timeline"></div>'; // Clear existing lines and reset hour timeline
+                sessions.forEach(session => {
+                    const clockInDate = session.clockIn.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+                    const clockOutDate = session.clockOut.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
 
+                    // Since sessions are split at midnight, clockInDate and clockOutDate should be the same
+                    const dateString = clockInDate;
 
-    Object.keys(timelines).forEach(day => {
-        let lastClockIn = null; // Track the last clock-in event
+                    if (!timelines[dateString]) {
+                        timelines[dateString] = [];
+                        minutesWorked[dateString] = 0;
+                        earnings[dateString] = 0;
+                        notesPerDay[dateString] = new Set();
+                        dayLabels.push(dateString);
+                    }
 
-        timelines[day].forEach((session, index) => {
-            const { clockIn, clockOut, note } = session;
+                    timelines[dateString].push({
+                        clockIn: session.clockIn,
+                        clockOut: null, // Ongoing session
+                        note: session.note
+                    });
 
-            if (clockIn && clockOut) {
-                addDayLine(day, clockIn, clockOut, note, index);
-            } else if (clockIn && !clockOut) {
-                lastClockIn = session;
+                    // We don't add to minutesWorked or earnings for ongoing sessions
+                    if (session.note) {
+                        notesPerDay[dateString].add(session.note);
+                    }
+                });
+            });
+
+            // Convert Set to Array for notes
+            for (const day in notesPerDay) {
+                notesPerDay[day] = Array.from(notesPerDay[day]);
             }
-        });
 
-        // Handle the current time block if it exists
-        if (lastClockIn) {
-            addDayLine(day, lastClockIn.clockIn, new Date(), lastClockIn.note, timelines[day].length - 1, true);
+            return { timelines, minutesWorked, earnings, dayLabels, notesPerDay };
         }
-    });
-}
 
+        // Function to split sessions at midnight
+        function splitSessionAtMidnight(session) {
+            const { clockIn, clockOut, note } = session;
+            const sessions = [];
 
-function updateBarChart(data) {
-    const { minutesWorked, earnings, dayLabels } = data;
-    const maxMinutes = Math.max(...Object.values(minutesWorked));
-    const minHeight = 2;
+            let currentStart = new Date(clockIn);
+            let currentEnd = new Date(clockOut);
 
-    // Clear the current chart container before re-populating it
-    chartContainer.innerHTML = '';
+            if (currentEnd <= currentStart) {
+                // Clock out is before clock in; invalid session
+                console.warn('Clock Out before Clock In detected.');
+                return [];
+            }
 
-    dayLabels.forEach(day => {
-        const minutes = Math.round(minutesWorked[day]);
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        const earningsForDay = earnings[day].toFixed(2); // Format earnings to 2 decimal places
+            // While current session crosses midnight
+            while (currentStart.toLocaleDateString() !== currentEnd.toLocaleDateString()) {
+                // End of the current day at 23:59:59
+                const endOfDay = new Date(currentStart);
+                endOfDay.setHours(23, 59, 59, 999);
 
-        const barHeightPercentage = (minutes / maxMinutes) * 100;
-        const barHeight = `${Math.max(barHeightPercentage, minHeight)}%`;
+                // Create session up to midnight
+                sessions.push({ clockIn: currentStart, clockOut: endOfDay, note });
 
-        const newBar = document.createElement('div');
-        newBar.className = 'bar';
-        newBar.style.height = barHeight;
-        newBar.setAttribute('data-day', day);
+                // Start of the next day at 00:00:00
+                currentStart = new Date(currentStart);
+                currentStart.setDate(currentStart.getDate() + 1);
+                currentStart.setHours(0, 0, 0, 0);
+            }
 
-        const barValue = document.createElement('div');
-        barValue.className = 'bar-value';
-        barValue.textContent = `${hours}:${remainingMinutes < 10 ? '0' + remainingMinutes : remainingMinutes} - $${earningsForDay}`;
+            // Add the last session
+            sessions.push({ clockIn: currentStart, clockOut: currentEnd, note });
 
-        const barLabel = document.createElement('div');
-        barLabel.className = 'bar-label';
-        barLabel.textContent = day;
-
-        newBar.appendChild(barValue);
-        newBar.appendChild(barLabel);
-        chartContainer.appendChild(newBar);
-    });
-}
-
-async function init() {
-    initializeContainers();
-    const rawData = await fetchData();
-    const processedData = processData(rawData);
-
-    const currentClockInSession = findCurrentClockInSession(processedData.timelines);
-    if (currentClockInSession) {
-        const { day, clockIn, note } = currentClockInSession;
-        currentTimeBlock = {
-            element: addDayLine(day, clockIn, new Date(), note, 'current', true),
-            clockIn: clockIn
-        };
-        currentTimeBlock.element.classList.add('current');
-        updateCurrentTimeBlock();
-        startEarningsUpdateInterval();
-    }
-
-    updateDayLines(processedData.timelines);
-    updateBarChart(processedData);
-    createHourTimeline();
-    calculateAndDisplayTotals(processedData);
-}
-
-async function updateRealTimeData() {
-    if (!currentTimeBlock) return;
-
-    const rawData = await fetchData();
-    const processedData = processData(rawData);
-
-    updateCurrentTimeBlock();
-    calculateAndDisplayTotals(processedData);
-}
-
-function findCurrentClockInSession(timelines) {
-    const today = new Date().toISOString().split('T')[0];
-    const todaySessions = timelines[today] || [];
-
-    for (const session of todaySessions) {
-        if (session.clockIn && !session.clockOut) {
-            return { day: today, ...session };
+            return sessions;
         }
-    }
 
-    return null;
-}
+        // Update Day Lines
+        function updateDayLines(timelines, notesPerDay) {
+            dayLineContainer.innerHTML = '<div class="hour-timeline"></div>'; // Reset hour timeline
+            createHourTimeline();
 
-function setStatus(status, lastTime) {
-    const statusElement = document.getElementById('status');
+            Object.keys(timelines).sort().forEach(day => {
+                let lastClockIn = null;
 
-    if (status === "Clocked in") {
-        statusElement.textContent = `Clocked in at ${formatTimeForDisplay(lastTime)}`;
-        statusElement.className = 'clocked-in';
-    } else if (status === "Clocked out" && lastTime) {
-        statusElement.textContent = `Clocked out at ${formatTimeForDisplay(lastTime)}`;
-        statusElement.className = 'clocked-out';
-    } else {
-        statusElement.textContent = `Clocked out`;
-        statusElement.className = 'clocked-out';
-    }
-}
+                timelines[day].forEach(session => {
+                    const { clockIn, clockOut, note } = session;
 
-async function clockIn() {
-    const note = document.getElementById('note').value;
-    const response = await fetch('/clock_in', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            note: note
-        })
-    });
-    const data = await response.json();
-    if (data.status === "Error") {
-        messageQueue.addMessage(data.message, true);
-    } else {
-        const startTime = new Date(data.time);
-        setStatus("Clocked in", data.time);
-        messageQueue.addMessage(`Clocked in at ${formatTimeForDisplay(data.time)} with note: "${note}"`);
-        const today = new Date().toISOString().split('T')[0];
-        currentTimeBlock = {
-            element: addDayLine(today, startTime, new Date(), note, 'current', true),
-            clockIn: startTime
-        };
-        currentTimeBlock.element.classList.add('current');
-        updateCurrentTimeBlock();
-
-        startEarningsUpdateInterval();  // Start updating earnings and time
-    }
-}
-
-// Function to clock out
-async function clockOut() {
-    const note = document.getElementById('note').value;
-    const response = await fetch('/clock_out', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            note: note
-        })
-    });
-    const data = await response.json();
-    
-    if (data.status === "Error") {
-        messageQueue.addMessage(data.message, true);
-    } else {
-        setStatus("Clocked out", data.time);
-        messageQueue.addMessage(`Clocked out at ${formatTimeForDisplay(data.time)} with note: "${note}"`);
-        
-        // Ensure any existing '.time-block.current' has its '.current' class removed
-        const currentBlock = document.querySelector('.time-block.current');
-        if (currentBlock) {
-            currentBlock.classList.remove('current');
+                    if (clockIn && clockOut !== null) {
+                        addDayLine(day, clockIn, clockOut, note, false);
+                    } else if (clockIn && clockOut === null) {
+                        // Ongoing session
+                        lastClockIn = session;
+                        addDayLine(day, clockIn, new Date(), note, true);
+                    }
+                });
+            });
         }
-        
-        if (currentTimeBlock) {
-            currentTimeBlock.element.style.width = `${(new Date() - currentTimeBlock.clockIn) / 1000 / 60 / 60 / 24 * 100}%`;
-            currentTimeBlock = null;
+
+        // Update Totals Tables
+        function updateTotalsTables(data) {
+            const { minutesWorked, earnings, notesPerDay } = data;
+
+            // Daily Totals
+            const dailyTotalsTableBody = document.querySelector('#daily-totals-table tbody');
+            dailyTotalsTableBody.innerHTML = ''; // Clear existing rows
+
+            const sortedDays = Object.keys(minutesWorked).sort();
+
+            for (const day of sortedDays) {
+                const minutes = Math.round(minutesWorked[day]);
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = Math.round(minutes % 60);
+                const earningsForDay = earnings[day].toFixed(2);
+                const notes = notesPerDay[day].length > 0 ? notesPerDay[day].join(', ') : 'N/A';
+
+                const row = document.createElement('tr');
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = day;
+
+                const hoursCell = document.createElement('td');
+                hoursCell.textContent = `${hours}h ${remainingMinutes}m`;
+
+                const earningsCell = document.createElement('td');
+                earningsCell.textContent = `$${earningsForDay}`;
+
+                const notesCell = document.createElement('td');
+                notesCell.textContent = notes;
+
+                row.appendChild(dateCell);
+                row.appendChild(hoursCell);
+                row.appendChild(earningsCell);
+                row.appendChild(notesCell);
+
+                dailyTotalsTableBody.appendChild(row);
+            }
+
+            // Weekly Totals
+            const weeklyTotalsTableBody = document.querySelector('#weekly-totals-table tbody');
+            weeklyTotalsTableBody.innerHTML = ''; // Clear existing rows
+
+            const weeks = {};
+            for (const day in minutesWorked) {
+                const date = new Date(day);
+                const weekNumber = getWeekNumber(date);
+                if (!weeks[weekNumber]) {
+                    weeks[weekNumber] = { minutes: 0, earnings: 0, notes: new Set() };
+                }
+                weeks[weekNumber].minutes += minutesWorked[day];
+                weeks[weekNumber].earnings += earnings[day];
+                if (notesPerDay[day].length > 0) {
+                    notesPerDay[day].forEach(note => weeks[weekNumber].notes.add(note));
+                }
+            }
+
+            const sortedWeeks = Object.keys(weeks).sort((a, b) => a - b);
+
+            for (const week of sortedWeeks) {
+                const minutes = Math.round(weeks[week].minutes);
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = Math.round(minutes % 60);
+                const earningsForWeek = weeks[week].earnings.toFixed(2);
+                const notes = weeks[week].notes.size > 0 ? Array.from(weeks[week].notes).join(', ') : 'N/A';
+
+                const row = document.createElement('tr');
+
+                const weekCell = document.createElement('td');
+                weekCell.textContent = `Week ${week}`;
+
+                const hoursCell = document.createElement('td');
+                hoursCell.textContent = `${hours}h ${remainingMinutes}m`;
+
+                const earningsCell = document.createElement('td');
+                earningsCell.textContent = `$${earningsForWeek}`;
+
+                const notesCell = document.createElement('td');
+                notesCell.textContent = notes;
+
+                row.appendChild(weekCell);
+                row.appendChild(hoursCell);
+                row.appendChild(earningsCell);
+                row.appendChild(notesCell);
+
+                weeklyTotalsTableBody.appendChild(row);
+            }
+
+            // Overall Totals
+            const totalMinutes = Object.values(minutesWorked).reduce((a, b) => a + b, 0);
+            const totalEarnings = Object.values(earnings).reduce((a, b) => a + b, 0).toFixed(2);
+            const totalHours = Math.floor(totalMinutes / 60);
+            const totalRemainingMinutes = Math.round(totalMinutes % 60);
+
+            const allNotesSet = new Set();
+            for (const day in notesPerDay) {
+                notesPerDay[day].forEach(note => allNotesSet.add(note));
+            }
+            const allNotes = allNotesSet.size > 0 ? Array.from(allNotesSet).join(', ') : 'N/A';
+
+            document.getElementById('overall-hours').textContent = `${totalHours}h ${totalRemainingMinutes}m`;
+            document.getElementById('overall-earnings').textContent = `$${totalEarnings}`;
+            document.getElementById('overall-notes').textContent = allNotes;
         }
-        
-        stopEarningsUpdateInterval();  // Stop updating earnings and time
-    }
-}
 
-
-// Function to start the interval for updating real-time data
-function startEarningsUpdateInterval() {
-    if (earningsUpdateInterval) {
-        clearInterval(earningsUpdateInterval);
-    }
-
-    earningsUpdateInterval = setInterval(updateCurrentTimeBlock, 60000);  // Update every minute
-}
-function stopEarningsUpdateInterval() {
-    if (earningsUpdateInterval) {
-        clearInterval(earningsUpdateInterval);
-        earningsUpdateInterval = null;
-    }
-}
-function formatTimeForDisplay(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    return `${hours}:${minutes} ${ampm}`;
-}
-
-// Initial call to setStatus on page load
-document.addEventListener('DOMContentLoaded', () => {
-    const status = "{{ status }}";
-    const lastTime = "{{ last_time }}";
-    setStatus(status, lastTime);
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    init();  // Initialize the chart and data fetching on page load
-});
-// Function to run on window resize
-function onResize() {
-    createHourTimeline();
-}
-function getWeekNumber(d) {
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return weekNo;
-}
-// Attach the resize event listener to the window
-window.addEventListener('resize', onResize);
-
-// Initial call to createHourTimeline to set it up on page load
-document.addEventListener('DOMContentLoaded', () => {
-    createHourTimeline(); // Initialize the hour markers when the page loads
-});
-async function calculateAndDisplayTotals() {
-    const rawData = await fetchData();  // Fetch the data
-    const data = processData(rawData);  // Process the data
-
-    const { minutesWorked, earnings, dayLabels } = data;  // Extract data
-    const weeklyTotals = {};
-    let overallMinutes = 0;
-    let overallEarnings = 0;
-    const today = new Date();
-    const currentWeekNumber = getWeekNumber(today);
-
-    dayLabels.forEach(day => {
-        const weekNumber = getWeekNumber(new Date(day));
-        if (!weeklyTotals[weekNumber]) {
-            weeklyTotals[weekNumber] = { minutes: 0, earnings: 0, isComplete: false, days: {} };
+        // Get ISO Week Number
+        function getWeekNumber(date) {
+            const tempDate = new Date(date.getTime());
+            tempDate.setHours(0, 0, 0, 0);
+            tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
+            const yearStart = new Date(tempDate.getFullYear(), 0, 1);
+            const weekNo = Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
         }
-        weeklyTotals[weekNumber].minutes += minutesWorked[day] || 0;
-        weeklyTotals[weekNumber].earnings += earnings[day] || 0;
-        overallMinutes += minutesWorked[day] || 0;
-        overallEarnings += earnings[day] || 0;
 
-        // Track daily totals within the week
-        weeklyTotals[weekNumber].days[day] = {
-            minutes: minutesWorked[day] || 0,
-            earnings: earnings[day] || 0
-        };
-    });
-
-    // Ensure the current week is initialized
-    if (!weeklyTotals[currentWeekNumber]) {
-        weeklyTotals[currentWeekNumber] = { minutes: 0, earnings: 0, isComplete: false, days: {} };
-    }
-
-    // Add current session if clocked in
-    if (currentTimeBlock) {  // Check if the user is clocked in
-        const currentSessionMinutes = (today - currentTimeBlock.clockIn) / (1000 * 60);
-        const payRate = parseFloat(document.getElementById('pay-rate').value) || 0;
-        const currentSessionEarnings = (currentSessionMinutes / 60) * payRate;
-
-        weeklyTotals[currentWeekNumber].minutes += currentSessionMinutes;
-        weeklyTotals[currentWeekNumber].earnings += currentSessionEarnings;
-        overallMinutes += currentSessionMinutes;
-        overallEarnings += currentSessionEarnings;
-    }
-
-    // Mark the current week as incomplete unless it's Sunday
-    weeklyTotals[currentWeekNumber].isComplete = today.getDay() === 0;
-
-    // Pass properly calculated totals to displayTotals
-    displayTotals(weeklyTotals, overallMinutes, overallEarnings);
-}
-
-
-function displayTotals(weeklyTotals, overallMinutes, overallEarnings) {
-    const dailyTotalsContainer = document.getElementById('daily-totals'); // Daily totals container
-    const weeklyTotalsContainer = document.getElementById('weekly-totals'); // Weekly totals container
-    const overallTotalsContainer = document.getElementById('overall-totals'); // Overall totals container
-
-    dailyTotalsContainer.innerHTML = ''; // Clear previous daily totals
-    weeklyTotalsContainer.innerHTML = ''; // Clear previous weekly totals
-
-    const rawData = Object.entries(weeklyTotals); // Convert the weekly totals object to an array of entries
-
-    dailyTotalsContainer.innerHTML += `<div style="color: var(--secondary-color)">Daily Totals:</div>`;
-    
-    // Display daily totals
-    for (const week in weeklyTotals) {
-        const { days } = weeklyTotals[week]; // Extract daily data for the week
-        for (const day in days) {
-            const minutes = days[day].minutes;
-            const hours = Math.floor(minutes / 60);
-            const remainingMinutes = Math.round(minutes % 60);
-            const earningsFormatted = days[day].earnings.toFixed(2);
-            
-            const dailyTotalDiv = document.createElement('div');
-            dailyTotalDiv.textContent = `Date ${day}: ${hours}h ${remainingMinutes}m - $${earningsFormatted}`;
-            dailyTotalsContainer.appendChild(dailyTotalDiv);
+        // Update Totals
+        function updateTotals(data) {
+            updateTotalsTables(data);
         }
-    }
 
-    // Display weekly totals
-    weeklyTotalsContainer.innerHTML = `<div style="color: var(--secondary-color)">Weekly Totals:</div>`;
-    for (const week in weeklyTotals) {
-        const { minutes, earnings, isComplete } = weeklyTotals[week];
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = Math.round(minutes % 60);
-        const earningsFormatted = earnings.toFixed(2);
+        // Clock In Function
+        async function clockIn() {
+            const note = document.getElementById('note').value.trim();
+            try {
+                const response = await fetch('/clock_in', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ note })
+                });
+                const data = await response.json();
+                if (data.status === "Error") {
+                    showMessage(data.message, true);
+                } else {
+                    const localTime = new Date(data.time); // Interpreted as local time
+                    showMessage(`Clocked in at ${formatTimeForDisplay(localTime)} with note: "${note}"`, false);
+                    init(); // Refresh data
+                }
+            } catch (error) {
+                showMessage('Clock In failed.', true);
+                console.error('Clock In failed:', error);
+            }
+        }
 
-        const weekTotal = document.createElement('div');
-        weekTotal.className = `week-total ${isComplete ? 'complete-week' : 'incomplete-week'}`;
-        weekTotal.textContent = `Week ${week}: ${hours}h ${remainingMinutes}m - $${earningsFormatted} ${isComplete ? '' : ''}`;
-        weeklyTotalsContainer.appendChild(weekTotal);
-    }
+        // Clock Out Function
+        async function clockOut() {
+            const note = document.getElementById('note').value.trim();
+            try {
+                const response = await fetch('/clock_out', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ note })
+                });
+                const data = await response.json();
+                if (data.status === "Error") {
+                    showMessage(data.message, true);
+                } else {
+                    const localTime = new Date(data.time); // Interpreted as local time
+                    showMessage(`Clocked out at ${formatTimeForDisplay(localTime)} with note: "${note}"`, false);
+                    init(); // Refresh data
+                }
+            } catch (error) {
+                showMessage('Clock Out failed.', true);
+                console.error('Clock Out failed:', error);
+            }
+        }
 
-    // Display overall totals
-    const overallHours = Math.floor(overallMinutes / 60);
-    const overallRemainingMinutes = Math.round(overallMinutes % 60);
-    const overallEarningsFormatted = overallEarnings.toFixed(2);
+        // Format Time for Display
+        function formatTimeForDisplay(date) {
+            if (!date) return '';
+            const options = {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true
+            };
+            return date.toLocaleTimeString([], options);
+        }
 
-    overallTotalsContainer.innerHTML = `Total: ${overallHours}h ${overallRemainingMinutes}m - $${overallEarningsFormatted}`;
-}
+        // Set Status based on Data
+        function setStatus(status, lastTime) {
+            const statusElement = document.getElementById('status');
 
-</script>
+            if (status === "Clocked in") {
+                const date = new Date(lastTime); // Interpreted as local time
+                statusElement.textContent = `Clocked in at ${formatTimeForDisplay(date)}`;
+                statusElement.className = 'clocked-in';
+            } else if (status === "Clocked out" && lastTime) {
+                const date = new Date(lastTime); // Interpreted as local time
+                statusElement.textContent = `Clocked out at ${formatTimeForDisplay(date)}`;
+                statusElement.className = 'clocked-out';
+            } else {
+                statusElement.textContent = `Clocked out`;
+                statusElement.className = 'clocked-out';
+            }
+        }
 
+        // Initialize Application
+        async function init() {
+            initializeContainers();
+            const rawData = await fetchData();
+            const processedData = processData(rawData);
+
+            const currentClockInSession = findCurrentClockInSession(processedData.timelines);
+            if (currentClockInSession) {
+                setStatus("Clocked in", currentClockInSession.clockIn);
+            } else {
+                // Find the last clock-out time
+                const lastTime = rawData.filter(entry => entry.Action === 'Clock Out').pop()?.Time;
+                setStatus("Clocked out", lastTime);
+            }
+
+            updateDayLines(processedData.timelines, processedData.notesPerDay);
+            updateTotals(processedData);
+            createHourTimeline();
+
+            setupInfoForms();
+        }
+
+        // Handle Window Resize for Hour Timeline Alignment
+        window.addEventListener('resize', createHourTimeline);
+
+        // Initialize Application on Page Load
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Update Sender and Recipient Info
+        function setupInfoForms() {
+            const senderInputs = document.querySelectorAll('.info-form input[id^="sender-"]');
+            const recipientInputs = document.querySelectorAll('.info-form input[id^="recipient-"]');
+            const senderInfoDisplay = document.getElementById('sender-info-display');
+            const recipientInfoDisplay = document.getElementById('recipient-info-display');
+
+            senderInputs.forEach(input => {
+                input.addEventListener('input', updateSenderInfo);
+            });
+
+            recipientInputs.forEach(input => {
+                input.addEventListener('input', updateRecipientInfo);
+            });
+
+            // Initial call to populate info displays
+            updateSenderInfo();
+            updateRecipientInfo();
+
+            function updateSenderInfo() {
+                const name = document.getElementById('sender-name').value;
+                const address1 = document.getElementById('sender-address1').value;
+                const address2 = document.getElementById('sender-address2').value;
+                const phone = document.getElementById('sender-phone').value;
+                const email = document.getElementById('sender-email').value;
+
+                senderInfoDisplay.innerHTML = `
+                    ${name ? `<strong>${name}</strong><br>` : ''}
+                    ${address1 ? `${address1}<br>` : ''}
+                    ${address2 ? `${address2}<br>` : ''}
+                    ${phone ? `Phone: ${phone}<br>` : ''}
+                    ${email ? `Email: ${email}<br>` : ''}
+                `;
+            }
+
+            function updateRecipientInfo() {
+                const name = document.getElementById('recipient-name').value;
+                const address1 = document.getElementById('recipient-address1').value;
+                const address2 = document.getElementById('recipient-address2').value;
+                const phone = document.getElementById('recipient-phone').value;
+                const email = document.getElementById('recipient-email').value;
+
+                recipientInfoDisplay.innerHTML = `
+                    ${name ? `<strong>${name}</strong><br>` : ''}
+                    ${address1 ? `${address1}<br>` : ''}
+                    ${address2 ? `${address2}<br>` : ''}
+                    ${phone ? `Phone: ${phone}<br>` : ''}
+                    ${email ? `Email: ${email}<br>` : ''}
+                `;
+            }
+        }
+    </script>
 </body>
 </html>
