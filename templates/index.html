@@ -3,11 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Time Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./static/style.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="./static/themes/default.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <!-- Sender and Recipient Blocks -->
     <div class="sender-recipient-blocks">
+        <!-- Invoice Title for Print -->
+        <div class="invoice-header print-only">
+            <h1>INVOICE</h1>
+            <div class="invoice-number">Invoice #: <span id="invoice-number">INV-2023001</span></div>
+            <div class="invoice-date">Date: <span id="invoice-date"></span></div>
+            <div class="invoice-total">Total Amount: <span id="invoice-total-amount">$0.00</span></div>
+        </div>
         <div class="sender-block">
             <h2>Sender Information</h2>
             <p id="sender-info-display"></p>
@@ -18,86 +30,136 @@
         </div>
     </div>
 
+    <!-- Modified top bar - removed pay rate -->
+    <div class="top-bar">
+        <div class="clock-controls hide-on-mobile">
+            <label for="note">Note:</label>
+            <input type="text" id="note" name="note" placeholder="Enter note...">
+            <button onclick="clockIn()" aria-label="Clock In">Clock In</button>
+            <button onclick="clockOut()" aria-label="Clock Out">Clock Out</button>
+            <span id="status" class="clocked-out">Clocked out</span>
+        </div>
+        <div class="settings-btn">
+            <button onclick="window.print()" aria-label="Print Invoice" class="print-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                    <path d="M6 14h12v8H6z"/>
+                </svg>
+                Print
+            </button>
+            <button onclick="openSettings()" aria-label="Open Settings">Settings</button>
+        </div>
+    </div>
+
     <h1>Time Tracker</h1>
-
-    <div class="container-pay-rate">
-        <label for="pay-rate">Pay Rate (per hour):</label>
-        <input type="number" id="pay-rate" name="pay-rate" value="21" step="0.01">
-    </div>
-
-    <div class="container">
-        <label for="note">Note:</label>
-        <input type="text" id="note" name="note" placeholder="Enter note...">
-        <button onclick="clockIn()" aria-label="Clock In">Clock In</button>
-        <button onclick="clockOut()" aria-label="Clock Out">Clock Out</button>
-        <span id="status" class="clocked-out">Clocked out</span>
-    </div>
 
     <div id="error-message" class="message"></div>
 
+    <!-- Update chart wrapper section -->
     <div class="chart-wrapper">
         <div class="day-line-container">
+            <h3>Timeline</h3>
             <div class="hour-timeline">
-                <!-- Hour markers will be positioned absolutely within this container -->
+                <!-- Hour markers will be positioned absolutely -->
             </div>
             <!-- Day lines will be appended here -->
         </div>      
 
-        <div class="totals-container">
-            <h3>Totals</h3>
-            <table id="daily-totals-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Hours Worked</th>
-                        <th>Earnings ($)</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Daily totals will be inserted here -->
-                </tbody>
-            </table>
+        <div class="content-columns">
+            <!-- Left Column - Activities -->
+            <div class="daily-activities">
+                <h3>Daily Activities</h3>
+                <div class="table-wrapper">
+                    <table id="activities-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            <div class="pagebreak"></div>
-            <table id="weekly-totals-table">
-                <thead>
-                    <tr>
-                        <th>Week Number</th>
-                        <th>Hours Worked</th>
-                        <th>Earnings ($)</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Weekly totals will be inserted here -->
-                </tbody>
-            </table>
-            <div class="pagebreak"></div>
-            <table id="overall-totals-table">
-                <thead>
-                    <tr>
-                        <th>Total Hours Worked</th>
-                        <th>Total Earnings ($)</th>
-                        <th>All Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td id="overall-hours">0h 0m</td>
-                        <td id="overall-earnings">$0.00</td>
-                        <td id="overall-notes" class="notes-list">N/A</td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Right Column - Totals -->
+            <div class="totals-container">
+                <h3>Time & Earnings</h3>
+                <div class="table-wrapper">
+                    <table id="daily-totals-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Hours</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Daily totals will be inserted here -->
+                        </tbody>
+                    </table>
+
+                    <table id="weekly-totals-table">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Hours</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Weekly totals will be inserted here -->
+                        </tbody>
+                    </table>
+
+                    <table id="overall-totals-table">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>Hours</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>All Time</td>
+                                <td id="overall-hours" class="hours-cell">0h 0m</td>
+                                <td id="overall-earnings" class="earnings-cell">$0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>  
 
-    <!-- Input Forms for Sender and Recipient -->
-    <div class="info-forms">
-        <div class="info-form">
-            <h2>Sender Information</h2>
-            <label for="sender-name">Name of Company:</label>
+    <!-- Modified settings modal - add pay rate -->
+    <div id="settings-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" onclick="closeSettings()">&times;</span>
+        <h1>Settings</h1>
+        <form id="settings-form">
+          <fieldset>
+            <legend>Pay Rate</legend>
+            <label for="settings-pay-rate">Pay Rate (per hour):</label>
+            <input type="number" id="settings-pay-rate" name="settings-pay-rate" value="21" step="0.01">
+          </fieldset>
+          <fieldset>
+            <legend>Appearance</legend>
+            <label for="wallpaper-url">Wallpaper URL:</label>
+            <input type="url" id="wallpaper-url" placeholder="Enter image URL">
+            <label for="theme-select">Select Theme:</label>
+            <select id="theme-select" onchange="changeTheme()">
+                <option value="default">Default</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+          </fieldset>
+          <fieldset>
+            <legend>Sender Information</legend>
+            <label for="sender-name">Company Name:</label>
             <input type="text" id="sender-name" placeholder="Company Name">
             <label for="sender-address1">Address Line 1:</label>
             <input type="text" id="sender-address1" placeholder="Address Line 1">
@@ -107,10 +169,10 @@
             <input type="text" id="sender-phone" placeholder="Phone Number">
             <label for="sender-email">Email:</label>
             <input type="email" id="sender-email" placeholder="Email">
-        </div>
-        <div class="info-form">
-            <h2>Recipient Information</h2>
-            <label for="recipient-name">Name of Company:</label>
+          </fieldset>
+          <fieldset>
+            <legend>Recipient Information</legend>
+            <label for="recipient-name">Company Name:</label>
             <input type="text" id="recipient-name" placeholder="Company Name">
             <label for="recipient-address1">Address Line 1:</label>
             <input type="text" id="recipient-address1" placeholder="Address Line 1">
@@ -120,10 +182,25 @@
             <input type="text" id="recipient-phone" placeholder="Phone Number">
             <label for="recipient-email">Email:</label>
             <input type="email" id="recipient-email" placeholder="Email">
-        </div>
+          </fieldset>
+          <button type="button" id="save-settings" onclick="saveSettings()">Save</button>
+        </form>
+      </div>
     </div>
 
     <div id="tooltip" class="tooltip"></div>
+
+    <!-- New Mobile Bottom Bar -->
+    <div class="mobile-bottom-bar">
+        <div class="clock-controls">
+            <input type="text" id="note-mobile" name="note-mobile" placeholder="Enter note...">
+            <div class="button-group">
+                <button onclick="clockIn()" aria-label="Clock In">Clock In</button>
+                <button onclick="clockOut()" aria-label="Clock Out">Clock Out</button>
+            </div>
+            <span id="status-mobile" class="clocked-out">Clocked out</span>
+        </div>
+    </div>
 
     <script src="static/script.js"></script>
 </body>

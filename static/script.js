@@ -1,6 +1,11 @@
 let chartContainer;
 let dayLineContainer;
 let currentTimeBlock = null;
+let currentSessionStart = null;  // new global variable
+let baseOverallMinutes = 0;      // new global variable
+let baseOverallEarnings = 0;     // new global variable
+let baseDailyTotals = {};        // new global object for daily totals
+let baseWeeklyTotals = {};       // new global object for weekly totals
 
 // Initialize containers
 function initializeContainers() {
@@ -11,11 +16,13 @@ function initializeContainers() {
 function createHourTimeline() {
     const hourTimeline = document.querySelector('.hour-timeline');
     hourTimeline.innerHTML = '';
-    for (let i = 0; i <= 24; i++) {
+    
+    // Create hour markers from 0 to 24
+    for (let i = 0; i <= 24; i += 2) {  // Changed to every 2 hours for less clutter
         const marker = document.createElement('div');
         marker.className = 'hour-marker';
         marker.style.left = `${(i / 24) * 100}%`;
-        marker.textContent = i < 24 ? formatHour(i) : '';
+        marker.textContent = formatHour(i);
         hourTimeline.appendChild(marker);
     }
 }
@@ -69,6 +76,14 @@ function addDayLine(day, startTime, endTime, note, isCurrent = false) {
     timeBlock.addEventListener('mouseover', (event) => showTooltip(event, note, startTime, endTime));
     timeBlock.addEventListener('mouseout', hideTooltip);
 
+    // Save reference for ongoing session to update in real time
+    if (isCurrent) {
+        timeBlock.dataset.startTime = startTime.toISOString();
+        timeBlock.dataset.note = note;
+        currentTimeBlock = timeBlock;
+        currentSessionStart = startTime;
+    }
+    
     dayLine.appendChild(timeBlock);
 
     return timeBlock;
@@ -154,7 +169,7 @@ function processData(data) {
     const notesPerDay = {};
     const dayLabels = [];
 
-    const payRate = parseFloat(document.getElementById('pay-rate').value) || 21.0;
+    const payRate = parseFloat(localStorage.getItem('payRate')) || 21.0;
 
     let openSessions = [];
 
@@ -199,7 +214,7 @@ function processData(data) {
                 const duration = (session.clockOut - session.clockIn) / (1000 * 60); // duration in minutes
                 minutesWorked[dateString] += duration;
                 earnings[dateString] += (duration / 60) * payRate;
-                if (session.note) {
+                if (session.note && session.note !== 'null') { // Ignore 'null' notes
                     notesPerDay[dateString].add(session.note);
                 }
             });
@@ -235,7 +250,7 @@ function processData(data) {
             });
 
             // We don't add to minutesWorked or earnings for ongoing sessions
-            if (session.note) {
+            if (session.note && session.note !== 'null') { // Ignore 'null' notes
                 notesPerDay[dateString].add(session.note);
             }
         });
@@ -286,6 +301,10 @@ function splitSessionAtMidnight(session) {
 
 // Update Day Lines
 function updateDayLines(timelines, notesPerDay) {
+    // Reset ongoing session globals
+    currentTimeBlock = null;
+    currentSessionStart = null;
+    
     dayLineContainer.innerHTML = '<div class="hour-timeline"></div>'; // Reset hour timeline
     createHourTimeline();
 
@@ -308,107 +327,129 @@ function updateDayLines(timelines, notesPerDay) {
 
 // Update Totals Tables
 function updateTotalsTables(data) {
-    const { minutesWorked, earnings, notesPerDay } = data;
-
-    // Daily Totals
+    const { minutesWorked, earnings, notesPerDay } = data;  // Add notesPerDay to destructuring
+    
+    // Daily Totals (simplify rows)
     const dailyTotalsTableBody = document.querySelector('#daily-totals-table tbody');
-    dailyTotalsTableBody.innerHTML = ''; // Clear existing rows
+    dailyTotalsTableBody.innerHTML = '';
 
-    const sortedDays = Object.keys(minutesWorked).sort();
-
-    for (const day of sortedDays) {
-        const minutes = Math.round(minutesWorked[day]);
+    Object.keys(minutesWorked).sort().forEach(day => {
+        const rawMinutes = minutesWorked[day];
+        const minutes = Math.round(rawMinutes);
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = Math.round(minutes % 60);
         const earningsForDay = earnings[day].toFixed(2);
-        const notes = notesPerDay[day].length > 0 ? notesPerDay[day].join(', ') : 'N/A';
 
         const row = document.createElement('tr');
-
-        const dateCell = document.createElement('td');
-        dateCell.textContent = day;
-
-        const hoursCell = document.createElement('td');
-        hoursCell.textContent = `${hours}h ${remainingMinutes}m`;
-
-        const earningsCell = document.createElement('td');
-        earningsCell.textContent = `$${earningsForDay}`;
-
-        const notesCell = document.createElement('td');
-        notesCell.textContent = notes;
-
-        row.appendChild(dateCell);
-        row.appendChild(hoursCell);
-        row.appendChild(earningsCell);
-        row.appendChild(notesCell);
-
+        row.id = `daily-${day}`;
+        row.innerHTML = `
+            <td class="date-cell">${day}</td>
+            <td class="hours-cell">${hours}h ${remainingMinutes}m</td>
+            <td class="earnings-cell">$${earningsForDay}</td>
+        `;
         dailyTotalsTableBody.appendChild(row);
-    }
+        baseDailyTotals[day] = { minutes: rawMinutes, earnings: earnings[day] };
+    });
 
-    // Weekly Totals
+    // Weekly Totals (simplify rows)
     const weeklyTotalsTableBody = document.querySelector('#weekly-totals-table tbody');
-    weeklyTotalsTableBody.innerHTML = ''; // Clear existing rows
+    weeklyTotalsTableBody.innerHTML = '';
 
     const weeks = {};
     for (const day in minutesWorked) {
         const date = new Date(day);
         const weekNumber = getWeekNumber(date);
         if (!weeks[weekNumber]) {
-            weeks[weekNumber] = { minutes: 0, earnings: 0, notes: new Set() };
+            weeks[weekNumber] = { minutes: 0, earnings: 0 };  // Remove notes from weekly object
         }
         weeks[weekNumber].minutes += minutesWorked[day];
         weeks[weekNumber].earnings += earnings[day];
-        if (notesPerDay[day].length > 0) {
-            notesPerDay[day].forEach(note => weeks[weekNumber].notes.add(note));
-        }
     }
 
     const sortedWeeks = Object.keys(weeks).sort((a, b) => a - b);
 
-    for (const week of sortedWeeks) {
-        const minutes = Math.round(weeks[week].minutes);
+    sortedWeeks.forEach(week => {
+        const rawMinutes = weeks[week].minutes;
+        const minutes = Math.round(rawMinutes);
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = Math.round(minutes % 60);
         const earningsForWeek = weeks[week].earnings.toFixed(2);
-        const notes = weeks[week].notes.size > 0 ? Array.from(weeks[week].notes).join(', ') : 'N/A';
 
         const row = document.createElement('tr');
-
-        const weekCell = document.createElement('td');
-        weekCell.textContent = `Week ${week}`;
-
-        const hoursCell = document.createElement('td');
-        hoursCell.textContent = `${hours}h ${remainingMinutes}m`;
-
-        const earningsCell = document.createElement('td');
-        earningsCell.textContent = `$${earningsForWeek}`;
-
-        const notesCell = document.createElement('td');
-        notesCell.textContent = notes;
-
-        row.appendChild(weekCell);
-        row.appendChild(hoursCell);
-        row.appendChild(earningsCell);
-        row.appendChild(notesCell);
-
+        row.id = `weekly-${week}`;
+        row.innerHTML = `
+            <td class="date-cell">Week ${week}</td>
+            <td class="hours-cell">${hours}h ${remainingMinutes}m</td>
+            <td class="earnings-cell">$${earningsForWeek}</td>
+        `;
         weeklyTotalsTableBody.appendChild(row);
-    }
+        baseWeeklyTotals[week] = { minutes: weeks[week].minutes, earnings: weeks[week].earnings };
+    });
 
-    // Overall Totals
+    // Overall Totals (update formatting)
     const totalMinutes = Object.values(minutesWorked).reduce((a, b) => a + b, 0);
-    const totalEarnings = Object.values(earnings).reduce((a, b) => a + b, 0).toFixed(2);
+    const totalEarnings = Object.values(earnings).reduce((a, b) => a + b, 0);
     const totalHours = Math.floor(totalMinutes / 60);
     const totalRemainingMinutes = Math.round(totalMinutes % 60);
 
-    const allNotesSet = new Set();
-    for (const day in notesPerDay) {
-        notesPerDay[day].forEach(note => allNotesSet.add(note));
-    }
-    const allNotes = allNotesSet.size > 0 ? Array.from(allNotesSet).join(', ') : 'N/A';
+    baseOverallMinutes = totalMinutes;
+    baseOverallEarnings = totalEarnings;
 
     document.getElementById('overall-hours').textContent = `${totalHours}h ${totalRemainingMinutes}m`;
-    document.getElementById('overall-earnings').textContent = `$${totalEarnings}`;
-    document.getElementById('overall-notes').textContent = allNotes;
+    document.getElementById('overall-earnings').textContent = `$${totalEarnings.toFixed(2)}`;
+
+    // Update invoice total amount for print
+    document.getElementById('invoice-total-amount').textContent = 
+        `$${totalEarnings.toFixed(2)}`;
+
+    // Populate Activities Table with all data
+    populateActivitiesTable(data.timelines, notesPerDay);  // Pass notesPerDay to activities table
+}
+
+// New function to populate activities table
+function createSectionHeader(title) {
+    const header = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.className = 'section-header';
+    cell.textContent = title;
+    header.appendChild(cell);
+    return header;
+}
+
+function createDivider() {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.className = 'section-divider';
+    row.appendChild(cell);
+    return row;
+}
+
+// Update function signature to accept notesPerDay
+function populateActivitiesTable(timelines, notesPerDay) {
+    const activitiesTableBody = document.querySelector('#activities-table tbody');
+    activitiesTableBody.innerHTML = '';
+    
+    // Group sessions by date
+    const sessionsByDate = {};
+    Object.entries(timelines).forEach(([date, sessions]) => {
+        sessionsByDate[date] = sessions;
+    });
+
+    // Create table rows - sort by date ascending (oldest first)
+    Object.entries(sessionsByDate)
+        .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+        .forEach(([date, sessions]) => {
+            const uniqueNotes = new Set(sessions.map(session => session.note).filter(note => note));
+            const notes = Array.from(uniqueNotes).join('; ') || 'N/A';
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="date-cell">${date}</td>
+                <td class="notes-cell">${notes}</td>
+            `;
+            activitiesTableBody.appendChild(row);
+        });
 }
 
 // Get ISO Week Number
@@ -428,7 +469,10 @@ function updateTotals(data) {
 
 // Clock In Function
 async function clockIn() {
-    const note = document.getElementById('note').value.trim();
+    let note = document.getElementById('note').value.trim();
+    if (!note) {
+        note = 'null';
+    }
     try {
         const response = await fetch('/clock_in', {
             method: 'POST',
@@ -451,7 +495,7 @@ async function clockIn() {
 
 // Clock Out Function
 async function clockOut() {
-    const note = document.getElementById('note').value.trim();
+    const note = 'null'; // Always set note to 'null' for clock out
     try {
         const response = await fetch('/clock_out', {
             method: 'POST',
@@ -463,7 +507,7 @@ async function clockOut() {
             showMessage(data.message, true);
         } else {
             const localTime = new Date(data.time); // Interpreted as local time
-            showMessage(`Clocked out at ${formatTimeForDisplay(localTime)} with note: "${note}"`, false);
+            showMessage(`Clocked out at ${formatTimeForDisplay(localTime)}`, false);
             init(); // Refresh data
         }
     } catch (error) {
@@ -504,6 +548,7 @@ function setStatus(status, lastTime) {
 // Initialize Application
 async function init() {
     initializeContainers();
+    setupInvoiceDates();
     const rawData = await fetchData();
     const processedData = processData(rawData);
 
@@ -521,6 +566,18 @@ async function init() {
     createHourTimeline();
 
     setupInfoForms();
+
+    // Apply saved wallpaper if exists
+    const wallpaperUrl = localStorage.getItem('wallpaperUrl');
+    if (wallpaperUrl) {
+        document.body.style.backgroundImage = `url('${wallpaperUrl}')`;
+    }
+
+    syncNoteInputs();
+
+    if (!localStorage.getItem('payRate')) {
+        localStorage.setItem('payRate', '21.00');
+    }
 }
 
 // Handle Window Resize for Hour Timeline Alignment
@@ -528,6 +585,67 @@ window.addEventListener('resize', createHourTimeline);
 
 // Initialize Application on Page Load
 document.addEventListener('DOMContentLoaded', init);
+
+// Update ongoing session width in real time
+setInterval(() => {
+    if (currentTimeBlock && currentSessionStart) {
+        const now = new Date();
+        const startDate = new Date(currentSessionStart);
+        const startPercent = ((startDate.getHours() + startDate.getMinutes()/60 + startDate.getSeconds()/3600) / 24) * 100;
+        const nowPercent = ((now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600) / 24) * 100;
+        currentTimeBlock.style.width = `${nowPercent - startPercent}%`;
+        currentTimeBlock.title = `Note: ${currentTimeBlock.dataset.note || 'N/A'}\nStart: ${formatTimeForDisplay(startDate)}\nEnd: Ongoing`;
+    }
+}, 1000);
+
+// New: Update overall totals (money and time) in real time if clocked in
+setInterval(() => {
+    if (currentSessionStart) {
+        const now = new Date();
+        const liveMinutes = (now - new Date(currentSessionStart)) / 60000; // elapsed in minutes
+        const updatedTotalMinutes = baseOverallMinutes + liveMinutes;
+        const updatedTotalHours = Math.floor(updatedTotalMinutes / 60);
+        const updatedRemainingMinutes = Math.round(updatedTotalMinutes % 60);
+
+        // Get current payRate
+        const payRate = parseFloat(localStorage.getItem('payRate')) || 21.0;
+        const liveEarnings = (liveMinutes / 60) * payRate;
+        const updatedTotalEarnings = baseOverallEarnings + liveEarnings;
+
+        document.getElementById('overall-hours').textContent = `${updatedTotalHours}h ${updatedRemainingMinutes}m`;
+        document.getElementById('overall-earnings').textContent = `$${updatedTotalEarnings.toFixed(2)}`;
+
+        // Determine current session's day and week
+        const sessionDate = new Date(currentSessionStart);
+        const dayKey = sessionDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
+        const weekKey = getWeekNumber(sessionDate);
+
+        // Update Daily Totals if row exists
+        let dailyRow = document.getElementById(`daily-${dayKey}`);
+        if (dailyRow) {
+            const baseDaily = baseDailyTotals[dayKey] || { minutes: 0, earnings: 0 };
+            const updatedDailyMinutes = baseDaily.minutes + liveMinutes;
+            const updatedDailyHours = Math.floor(updatedDailyMinutes / 60);
+            const updatedDailyRemaining = Math.round(updatedDailyMinutes % 60);
+            const updatedDailyEarnings = baseDaily.earnings + liveEarnings;
+            // Assuming cells: 0-date, 1-hours, 2-earnings, 3-notes
+            dailyRow.cells[1].textContent = `${updatedDailyHours}h ${updatedDailyRemaining}m`;
+            dailyRow.cells[2].textContent = `$${updatedDailyEarnings.toFixed(2)}`;
+        }
+        // Update Weekly Totals if row exists
+        let weeklyRow = document.getElementById(`weekly-${weekKey}`);
+        if (weeklyRow) {
+            const baseWeekly = baseWeeklyTotals[weekKey] || { minutes: 0, earnings: 0 };
+            const updatedWeeklyMinutes = baseWeekly.minutes + liveMinutes;
+            const updatedWeeklyHours = Math.floor(updatedWeeklyMinutes / 60);
+            const updatedWeeklyRemaining = Math.round(updatedWeeklyMinutes % 60);
+            const updatedWeeklyEarnings = baseWeekly.earnings + liveEarnings;
+            // Assuming cells: 0-week, 1-hours, 2-earnings, 3-notes
+            weeklyRow.cells[1].textContent = `${updatedWeeklyHours}h ${updatedWeeklyRemaining}m`;
+            weeklyRow.cells[2].textContent = `$${updatedWeeklyEarnings.toFixed(2)}`;
+        }
+    }
+}, 1000);
 
 // Update Sender and Recipient Info
 function setupInfoForms() {
@@ -547,36 +665,202 @@ function setupInfoForms() {
     // Initial call to populate info displays
     updateSenderInfo();
     updateRecipientInfo();
+}
 
-    function updateSenderInfo() {
-        const name = document.getElementById('sender-name').value;
-        const address1 = document.getElementById('sender-address1').value;
-        const address2 = document.getElementById('sender-address2').value;
-        const phone = document.getElementById('sender-phone').value;
-        const email = document.getElementById('sender-email').value;
+// Update Sender and Recipient Info to load from localStorage
+function updateSenderInfo() {
+    const sender = JSON.parse(localStorage.getItem('senderInfo') || '{}');
+    const senderInfoDisplay = document.getElementById('sender-info-display');
+    senderInfoDisplay.innerHTML = `
+        ${sender.name ? `<strong>${sender.name}</strong><br>` : ''}
+        ${sender.address1 ? `${sender.address1}<br>` : ''}
+        ${sender.address2 ? `${sender.address2}<br>` : ''}
+        ${sender.phone ? `Phone: ${sender.phone}<br>` : ''}
+        ${sender.email ? `Email: ${sender.email}<br>` : ''}
+    `;
+}
 
-        senderInfoDisplay.innerHTML = `
-            ${name ? `<strong>${name}</strong><br>` : ''}
-            ${address1 ? `${address1}<br>` : ''}
-            ${address2 ? `${address2}<br>` : ''}
-            ${phone ? `Phone: ${phone}<br>` : ''}
-            ${email ? `Email: ${email}<br>` : ''}
-        `;
-    }
+function updateRecipientInfo() {
+    const recipient = JSON.parse(localStorage.getItem('recipientInfo') || '{}');
+    const recipientInfoDisplay = document.getElementById('recipient-info-display');
+    recipientInfoDisplay.innerHTML = `
+        ${recipient.name ? `<strong>${recipient.name}</strong><br>` : ''}
+        ${recipient.address1 ? `${recipient.address1}<br>` : ''}
+        ${recipient.address2 ? `${recipient.address2}<br>` : ''}
+        ${recipient.phone ? `Phone: ${recipient.phone}<br>` : ''}
+        ${recipient.email ? `Email: ${recipient.email}<br>` : ''}
+    `;
+}
 
-    function updateRecipientInfo() {
-        const name = document.getElementById('recipient-name').value;
-        const address1 = document.getElementById('recipient-address1').value;
-        const address2 = document.getElementById('recipient-address2').value;
-        const phone = document.getElementById('recipient-phone').value;
-        const email = document.getElementById('recipient-email').value;
+// Functions to open/close settings modal and save settings
+function openSettings() {
+    const modal = document.getElementById('settings-modal');
+    loadSettings(); // Populate form fields from localStorage
+    modal.style.display = 'block';
 
-        recipientInfoDisplay.innerHTML = `
-            ${name ? `<strong>${name}</strong><br>` : ''}
-            ${address1 ? `${address1}<br>` : ''}
-            ${address2 ? `${address2}<br>` : ''}
-            ${phone ? `Phone: ${phone}<br>` : ''}
-            ${email ? `Email: ${email}<br>` : ''}
-        `;
+    // Add event listener for Escape key
+    document.addEventListener('keydown', handleEscapeKey);
+}
+
+function closeSettings() {
+    const modal = document.getElementById('settings-modal');
+    modal.style.display = 'none';
+
+    // Remove event listener for Escape key
+    document.removeEventListener('keydown', handleEscapeKey);
+}
+
+function handleEscapeKey(event) {
+    if (event.key === 'Escape') {
+        closeSettings();
     }
 }
+
+function loadSettings() {
+    // Load pay rate
+    const payRate = localStorage.getItem('payRate') || '21.00';
+    document.getElementById('settings-pay-rate').value = payRate;
+    
+    // Load wallpaper
+    const wallpaperUrl = localStorage.getItem('wallpaperUrl') || '';
+    document.getElementById('wallpaper-url').value = wallpaperUrl;
+    if (wallpaperUrl) {
+        document.body.style.backgroundImage = `url('${wallpaperUrl}')`;
+    }
+    
+    // Load theme
+    const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+    document.getElementById('theme-select').value = savedTheme;
+    changeTheme();
+    
+    // Load existing settings
+    const sender = JSON.parse(localStorage.getItem('senderInfo') || '{}');
+    document.getElementById('sender-name').value = sender.name || '';
+    document.getElementById('sender-address1').value = sender.address1 || '';
+    document.getElementById('sender-address2').value = sender.address2 || '';
+    document.getElementById('sender-phone').value = sender.phone || '';
+    document.getElementById('sender-email').value = sender.email || '';
+    
+    const recipient = JSON.parse(localStorage.getItem('recipientInfo') || '{}');
+    document.getElementById('recipient-name').value = recipient.name || '';
+    document.getElementById('recipient-address1').value = recipient.address1 || '';
+    document.getElementById('recipient-address2').value = recipient.address2 || '';
+    document.getElementById('recipient-phone').value = recipient.phone || '';
+    document.getElementById('recipient-email').value = recipient.email || '';
+}
+
+function saveSettings() {
+    // Save pay rate
+    const payRate = document.getElementById('settings-pay-rate').value.trim();
+    localStorage.setItem('payRate', payRate || '21.00');
+    
+    // Save wallpaper
+    const wallpaperUrl = document.getElementById('wallpaper-url').value.trim();
+    localStorage.setItem('wallpaperUrl', wallpaperUrl);
+    if (wallpaperUrl) {
+        document.body.style.backgroundImage = `url('${wallpaperUrl}')`;
+    }
+    
+    // Save theme
+    const theme = document.getElementById('theme-select').value;
+    localStorage.setItem('selectedTheme', theme);
+    changeTheme();
+    
+    // Save existing settings
+    const senderInfo = {
+        name: document.getElementById('sender-name').value.trim(),
+        address1: document.getElementById('sender-address1').value.trim(),
+        address2: document.getElementById('sender-address2').value.trim(),
+        phone: document.getElementById('sender-phone').value.trim(),
+        email: document.getElementById('sender-email').value.trim()
+    };
+    localStorage.setItem('senderInfo', JSON.stringify(senderInfo));
+    
+    const recipientInfo = {
+        name: document.getElementById('recipient-name').value.trim(),
+        address1: document.getElementById('recipient-address1').value.trim(),
+        address2: document.getElementById('recipient-address2').value.trim(),
+        phone: document.getElementById('recipient-phone').value.trim(),
+        email: document.getElementById('recipient-email').value.trim()
+    };
+    localStorage.setItem('recipientInfo', JSON.stringify(recipientInfo));
+    
+    updateSenderInfo();  // Refresh displayed info
+    updateRecipientInfo();
+    closeSettings();
+}
+
+// Add date formatting for invoice
+function setupInvoiceDates() {
+    const now = new Date();
+    // Removed due date calculation
+    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('invoice-date').textContent = now.toLocaleDateString('en-US', dateOptions);
+
+    // Update the invoice date whenever printing
+    window.addEventListener('beforeprint', () => {
+        const printDate = new Date();
+        document.getElementById('invoice-date').textContent = 
+            printDate.toLocaleDateString('en-US', dateOptions);
+    });
+}
+
+// Sync note inputs between mobile and desktop
+function syncNoteInputs() {
+    const noteDesktop = document.getElementById('note');
+    const noteMobile = document.getElementById('note-mobile');
+    const statusDesktop = document.getElementById('status');
+    const statusMobile = document.getElementById('status-mobile');
+
+    noteDesktop.addEventListener('input', () => {
+        noteMobile.value = noteDesktop.value;
+    });
+
+    noteMobile.addEventListener('input', () => {
+        noteDesktop.value = noteMobile.value;
+    });
+
+    // Update both status displays
+    function updateBothStatuses(text, className) {
+        statusDesktop.textContent = text;
+        statusMobile.textContent = text;
+        statusDesktop.className = className;
+        statusMobile.className = className;
+    }
+
+    // Modify existing setStatus function
+    const originalSetStatus = setStatus;
+    setStatus = function(status, lastTime) {
+        originalSetStatus(status, lastTime);
+        if (status === "Clocked in") {
+            const date = new Date(lastTime);
+            updateBothStatuses(
+                `Clocked in at ${formatTimeForDisplay(date)}`,
+                'clocked-in'
+            );
+        } else if (status === "Clocked out" && lastTime) {
+            const date = new Date(lastTime);
+            updateBothStatuses(
+                `Clocked out at ${formatTimeForDisplay(date)}`,
+                'clocked-out'
+            );
+        } else {
+            updateBothStatuses('Clocked out', 'clocked-out');
+        }
+    };
+}
+
+// Function to change theme
+function changeTheme() {
+    const theme = document.getElementById('theme-select').value;
+    const themeStylesheet = document.getElementById('theme-stylesheet');
+    themeStylesheet.href = `./static/themes/${theme}.css`;
+    localStorage.setItem('selectedTheme', theme);
+}
+
+// Load the saved theme on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+    document.getElementById('theme-select').value = savedTheme;
+    changeTheme();
+});

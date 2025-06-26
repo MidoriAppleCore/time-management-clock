@@ -1,0 +1,23 @@
+:root {
+    --primary-color: #FFB703;
+    --secondary-color: #8ECAE6;
+    --accent-color: #219EBC;
+    --background-color: #FFFFFF;
+    --card-background: rgba(255, 255, 255, 0.8);
+    --text-color: #000000;
+    --muted-text: #6B7280;
+    --border-color: #E5E7EB;
+    --error-color: #E76F51;
+    --success-color: #2A9D8F;
+    --warning-color: #E9C46A;
+    --border-radius: 0px;
+    --transition-speed: 0.3s;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --wallpaper-overlay: rgba(255, 255, 255, 0.90);
+    --mobile-bottom-bar-height: 80px;
+    --tablet-breakpoint: 768px;
+    --desktop-breakpoint: 1024px;
+    --mobile-bottom-padding: calc(var(--mobile-bottom-bar-height) + 20px);
+}
+
+/* ...existing styles... */

@@ -1,0 +1,26 @@
+/* Moved styles from style.css */
+
+:root {
+    /* Light on Dark Nice Color Scheme (Blackish Dark) */
+    --primary-color: #FFB703;
+    --secondary-color: #8ECAE6;
+    --accent-color: #219EBC;
+    --background-color: #1A1A1A;
+    --card-background: rgba(26, 26, 26, 0.8);
+    --text-color: #F0F0F0;
+    --muted-text: #9CA3AF;
+    --border-color: #2B2B2B;
+    --error-color: #E76F51;
+    --success-color: #2A9D8F;
+    --warning-color: #E9C46A;
+    --border-radius: 0px;
+    --transition-speed: 0.3s;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --wallpaper-overlay: rgba(26, 26, 26, 0.90);
+    --mobile-bottom-bar-height: 80px;
+    --tablet-breakpoint: 768px;
+    --desktop-breakpoint: 1024px;
+    --mobile-bottom-padding: calc(var(--mobile-bottom-bar-height) + 20px);
+}
+
+/* ...existing styles... */
