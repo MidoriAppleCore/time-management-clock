@@ -13,20 +13,27 @@
 <body>
     <!-- Sender and Recipient Blocks -->
     <div class="sender-recipient-blocks">
-        <!-- Invoice Title for Print -->
+        <!-- Invoice Header for Print Only -->
         <div class="invoice-header print-only">
             <h1>INVOICE</h1>
-            <div class="invoice-number">Invoice #: <span id="invoice-number">INV-2023001</span></div>
-            <div class="invoice-date">Date: <span id="invoice-date"></span></div>
-            <div class="invoice-total">Total Amount: <span id="invoice-total-amount">$0.00</span></div>
+            <div class="invoice-meta">
+                <div class="invoice-number">Invoice #: <span id="invoice-number">INV-2025001</span></div>
+                <div class="invoice-date">Issue Date: <span id="invoice-date"></span></div>
+                <div class="invoice-due-date">Due Date: <span id="invoice-due-date"></span></div>
+            </div>
+            <div class="invoice-total">
+                <strong>TOTAL AMOUNT DUE: <span id="invoice-total-amount">$0.00</span></strong>
+            </div>
         </div>
-        <div class="sender-block">
-            <h2>Sender Information</h2>
-            <p id="sender-info-display"></p>
-        </div>
-        <div class="recipient-block">
-            <h2>Recipient Information</h2>
-            <p id="recipient-info-display"></p>
+        <div class="sender-recipient-info">
+            <div class="sender-block">
+                <h2>From (Service Provider)</h2>
+                <p id="sender-info-display"></p>
+            </div>
+            <div class="recipient-block">
+                <h2>To (Client)</h2>
+                <p id="recipient-info-display"></p>
+            </div>
         </div>
     </div>
 
@@ -133,7 +140,7 @@
                 </div>
             </div>
         </div>
-    </div>  
+    </div>
 
     <!-- Modified settings modal - add pay rate -->
     <div id="settings-modal" class="modal" style="display:none;">
