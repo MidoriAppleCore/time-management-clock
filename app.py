@@ -21,29 +21,46 @@ def load_data():
     data = []
     
     for file in all_files:
-        df = pd.read_csv(file)
-        
-        # Treat 'Time' as local time
-        df['Time'] = pd.to_datetime(df['Time'])  # Treat it as local time (without timezone conversion)
-        
-        # Check if 'Note' column exists, and if not, create it with empty strings
-        if 'Note' not in df.columns:
-            df['Note'] = ''
-        
-        # Replace NaN and NaT with None (null in JSON)
-        df = df.replace({pd.NA: None, pd.NaT: None})
-        
-        # Convert to JSON format (keep in local time for now)
-        for _, row in df.iterrows():
-            data.append({
-                "Action": row['Action'],
-                "Time": row['Time'].strftime('%Y-%m-%d %H:%M:%S'),  # Keep local time format
-                "Note": row.get('Note', '')  # Default to empty string if Note is missing or NaN
-            })
+        try:
+            df = pd.read_csv(file)
+            
+            # Treat 'Time' as local time
+            df['Time'] = pd.to_datetime(df['Time'])  # Treat it as local time (without timezone conversion)
+            
+            # Check if 'Note' column exists, and if not, create it with empty strings
+            if 'Note' not in df.columns:
+                df['Note'] = ''
+            
+            # Replace NaN and NaT with None (null in JSON), and 'null' strings with empty strings
+            df = df.replace({pd.NA: None, pd.NaT: None, 'null': ''})
+            
+            # Convert to JSON format (keep in local time for now)
+            for _, row in df.iterrows():
+                # Skip rows with invalid time data
+                if pd.isna(row['Time']) or row['Time'] is None:
+                    continue
+                    
+                try:
+                    time_str = row['Time'].strftime('%Y-%m-%d %H:%M:%S')
+                    data.append({
+                        "Action": row['Action'],
+                        "Time": time_str,  # Keep local time format
+                        "Note": row.get('Note', '') or ''  # Default to empty string if Note is missing, NaN, or 'null'
+                    })
+                except (ValueError, AttributeError) as e:
+                    print(f"Skipping row with invalid time data: {row}, error: {e}")
+                    continue
+        except Exception as e:
+            print(f"Error reading file {file}: {e}")
+            continue
     
     # Sort all data by Time to ensure chronological order
-    data_sorted = sorted(data, key=lambda x: datetime.strptime(x['Time'], '%Y-%m-%d %H:%M:%S'))
-    return data_sorted
+    try:
+        data_sorted = sorted(data, key=lambda x: datetime.strptime(x['Time'], '%Y-%m-%d %H:%M:%S'))
+        return data_sorted
+    except ValueError as e:
+        print(f"Error sorting data by time: {e}")
+        return data
 
 def get_current_status():
     data = load_data()
@@ -54,6 +71,14 @@ def get_current_status():
     last_action_entry = data[-1]
     last_action = last_action_entry['Action']
     last_time = last_action_entry['Time']
+    
+    # Validate the time string
+    try:
+        # Try to parse the time to ensure it's valid
+        datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')
+    except (ValueError, TypeError):
+        # If time is invalid, return without time
+        return ("Clocked in", None) if last_action == "Clock In" else ("Clocked out", None)
     
     return ("Clocked in", last_time) if last_action == "Clock In" else ("Clocked out", last_time)
 
@@ -69,7 +94,11 @@ def clock_in():
     if current_status == "Clocked in":
         return jsonify({"status": "Error", "message": "Already clocked in!"}), 400
     
-    note = request.form.get('note', '')
+    note = request.form.get('note', '').strip()
+    # Don't use 'null' string, use empty string for empty notes
+    if not note:
+        note = ''
+    
     current_time = datetime.now()  # Use local time (not UTC)
     filename = get_filename_for_date(current_time)
     data = {'Action': 'Clock In', 'Time': current_time.strftime('%Y-%m-%d %H:%M:%S'), 'Note': note}
@@ -84,7 +113,11 @@ def clock_out():
     if current_status == "Clocked out":
         return jsonify({"status": "Error", "message": "Already clocked out!"}), 400
     
-    note = request.form.get('note', '')
+    note = request.form.get('note', '').strip()
+    # Don't use 'null' string, use empty string for empty notes
+    if not note:
+        note = ''
+    
     current_time = datetime.now()  # Use local time (not UTC)
     filename = get_filename_for_date(current_time)
     data = {'Action': 'Clock Out', 'Time': current_time.strftime('%Y-%m-%d %H:%M:%S'), 'Note': note}

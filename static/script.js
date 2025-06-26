@@ -175,9 +175,15 @@ function processData(data) {
 
     data.forEach(entry => {
         const date = new Date(entry.Time); // Interpreting as local time
+        
+        // Validate the date
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date in entry:', entry);
+            return;
+        }
 
         if (entry.Action === 'Clock In') {
-            openSessions.push({ clockIn: date, clockOut: null, note: entry.Note });
+            openSessions.push({ clockIn: date, clockOut: null, note: entry.Note || '' });
         } else if (entry.Action === 'Clock Out') {
             if (openSessions.length === 0) {
                 // Handle error: Clock Out without Clock In
@@ -214,7 +220,7 @@ function processData(data) {
                 const duration = (session.clockOut - session.clockIn) / (1000 * 60); // duration in minutes
                 minutesWorked[dateString] += duration;
                 earnings[dateString] += (duration / 60) * payRate;
-                if (session.note && session.note !== 'null') { // Ignore 'null' notes
+                if (session.note && session.note !== 'null' && session.note !== '') { // Ignore 'null' and empty notes
                     notesPerDay[dateString].add(session.note);
                 }
             });
@@ -225,12 +231,19 @@ function processData(data) {
     openSessions.forEach(session => {
         const now = new Date();
 
+        // Validate session clock in time
+        if (!session.clockIn || !(session.clockIn instanceof Date) || isNaN(session.clockIn.getTime())) {
+            console.warn('Invalid clock in time for open session:', session);
+            return;
+        }
+
         // Split session if it crosses midnight
         const sessions = splitSessionAtMidnight({ ...session, clockOut: now });
 
-        sessions.forEach(session => {
-            const clockInDate = session.clockIn.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
-            const clockOutDate = session.clockOut.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+        sessions.forEach((splitSession, index) => {
+            const clockInDate = splitSession.clockIn.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+            const clockOutDate = splitSession.clockOut.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+            const todayDate = now.toLocaleDateString('en-CA');
 
             // Since sessions are split at midnight, clockInDate and clockOutDate should be the same
             const dateString = clockInDate;
@@ -243,15 +256,26 @@ function processData(data) {
                 dayLabels.push(dateString);
             }
 
+            // Only the session for today should be marked as ongoing (clockOut: null)
+            // All previous days should be marked as completed sessions
+            const isCurrentDay = dateString === todayDate && index === sessions.length - 1;
+            
             timelines[dateString].push({
-                clockIn: session.clockIn,
-                clockOut: null, // Ongoing session
-                note: session.note
+                clockIn: splitSession.clockIn,
+                clockOut: isCurrentDay ? null : splitSession.clockOut, // Only current day is ongoing
+                note: splitSession.note || ''
             });
 
-            // We don't add to minutesWorked or earnings for ongoing sessions
-            if (session.note && session.note !== 'null') { // Ignore 'null' notes
-                notesPerDay[dateString].add(session.note);
+            // For completed portions of the ongoing session (previous days), add to worked time and earnings
+            if (!isCurrentDay) {
+                const duration = (splitSession.clockOut - splitSession.clockIn) / (1000 * 60); // duration in minutes
+                minutesWorked[dateString] += duration;
+                earnings[dateString] += (duration / 60) * payRate;
+            }
+
+            // Add notes for all days
+            if (splitSession.note && splitSession.note !== 'null' && splitSession.note !== '') {
+                notesPerDay[dateString].add(splitSession.note);
             }
         });
     });
@@ -269,12 +293,23 @@ function splitSessionAtMidnight(session) {
     const { clockIn, clockOut, note } = session;
     const sessions = [];
 
+    // Validate input dates
+    if (!clockIn || !clockOut || !(clockIn instanceof Date) || !(clockOut instanceof Date)) {
+        console.warn('Invalid dates in splitSessionAtMidnight:', { clockIn, clockOut });
+        return [];
+    }
+
+    if (isNaN(clockIn.getTime()) || isNaN(clockOut.getTime())) {
+        console.warn('Invalid date objects in splitSessionAtMidnight:', { clockIn, clockOut });
+        return [];
+    }
+
     let currentStart = new Date(clockIn);
     let currentEnd = new Date(clockOut);
 
     if (currentEnd <= currentStart) {
         // Clock out is before clock in; invalid session
-        console.warn('Clock Out before Clock In detected.');
+        console.warn('Clock Out before Clock In detected:', { currentStart, currentEnd });
         return [];
     }
 
@@ -285,7 +320,7 @@ function splitSessionAtMidnight(session) {
         endOfDay.setHours(23, 59, 59, 999);
 
         // Create session up to midnight
-        sessions.push({ clockIn: currentStart, clockOut: endOfDay, note });
+        sessions.push({ clockIn: new Date(currentStart), clockOut: endOfDay, note });
 
         // Start of the next day at 00:00:00
         currentStart = new Date(currentStart);
@@ -294,7 +329,7 @@ function splitSessionAtMidnight(session) {
     }
 
     // Add the last session
-    sessions.push({ clockIn: currentStart, clockOut: currentEnd, note });
+    sessions.push({ clockIn: new Date(currentStart), clockOut: new Date(currentEnd), note });
 
     return sessions;
 }
@@ -309,17 +344,37 @@ function updateDayLines(timelines, notesPerDay) {
     createHourTimeline();
 
     Object.keys(timelines).sort().forEach(day => {
-        let lastClockIn = null;
-
         timelines[day].forEach(session => {
             const { clockIn, clockOut, note } = session;
 
             if (clockIn && clockOut !== null) {
+                // Completed session - show the full session for this day
                 addDayLine(day, clockIn, clockOut, note, false);
             } else if (clockIn && clockOut === null) {
-                // Ongoing session
-                lastClockIn = session;
-                addDayLine(day, clockIn, new Date(), note, true);
+                // Ongoing session - need to check if it's actually ongoing today
+                const today = new Date().toLocaleDateString('en-CA');
+                if (day === today) {
+                    // This is the current day portion of an ongoing session
+                    const sessionStart = new Date(clockIn);
+                    const dayStart = new Date(sessionStart);
+                    
+                    // If the session started before today, it should start at 00:00:00 for this day
+                    if (sessionStart.toLocaleDateString('en-CA') !== today) {
+                        dayStart.setHours(0, 0, 0, 0);
+                        // Set the date to today
+                        const todayDate = new Date();
+                        dayStart.setFullYear(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+                    }
+                    
+                    addDayLine(day, dayStart, new Date(), note, true);
+                    currentSessionStart = sessionStart; // Keep the original start time for calculations
+                } else {
+                    // This is a completed portion of a session that is ongoing but not on this day
+                    // This should show as a completed session up to the end of the day
+                    const endOfDay = new Date(clockIn);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    addDayLine(day, clockIn, endOfDay, note, false);
+                }
             }
         });
     });
@@ -471,7 +526,7 @@ function updateTotals(data) {
 async function clockIn() {
     let note = document.getElementById('note').value.trim();
     if (!note) {
-        note = 'null';
+        note = ''; // Use empty string instead of 'null'
     }
     try {
         const response = await fetch('/clock_in', {
@@ -483,8 +538,13 @@ async function clockIn() {
         if (data.status === "Error") {
             showMessage(data.message, true);
         } else {
-            const localTime = new Date(data.time); // Interpreted as local time
-            showMessage(`Clocked in at ${formatTimeForDisplay(localTime)} with note: "${note}"`, false);
+            const localTime = new Date(data.time);
+            if (!isNaN(localTime.getTime())) {
+                const noteDisplay = note || 'No note';
+                showMessage(`Clocked in at ${formatTimeForDisplay(localTime)} with note: "${noteDisplay}"`, false);
+            } else {
+                showMessage('Clocked in successfully', false);
+            }
             init(); // Refresh data
         }
     } catch (error) {
@@ -495,7 +555,7 @@ async function clockIn() {
 
 // Clock Out Function
 async function clockOut() {
-    const note = 'null'; // Always set note to 'null' for clock out
+    const note = ''; // Use empty string instead of 'null'
     try {
         const response = await fetch('/clock_out', {
             method: 'POST',
@@ -506,8 +566,12 @@ async function clockOut() {
         if (data.status === "Error") {
             showMessage(data.message, true);
         } else {
-            const localTime = new Date(data.time); // Interpreted as local time
-            showMessage(`Clocked out at ${formatTimeForDisplay(localTime)}`, false);
+            const localTime = new Date(data.time);
+            if (!isNaN(localTime.getTime())) {
+                showMessage(`Clocked out at ${formatTimeForDisplay(localTime)}`, false);
+            } else {
+                showMessage('Clocked out successfully', false);
+            }
             init(); // Refresh data
         }
     } catch (error) {
@@ -519,6 +583,12 @@ async function clockOut() {
 // Format Time for Display
 function formatTimeForDisplay(date) {
     if (!date) return '';
+    
+    // Handle invalid dates or null/undefined input
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        return '';
+    }
+    
     const options = {
         hour: 'numeric',
         minute: 'numeric',
@@ -532,12 +602,26 @@ function setStatus(status, lastTime) {
     const statusElement = document.getElementById('status');
 
     if (status === "Clocked in") {
-        const date = new Date(lastTime); // Interpreted as local time
-        statusElement.textContent = `Clocked in at ${formatTimeForDisplay(date)}`;
+        if (lastTime) {
+            const date = new Date(lastTime);
+            if (!isNaN(date.getTime())) {
+                statusElement.textContent = `Clocked in at ${formatTimeForDisplay(date)}`;
+                statusElement.className = 'clocked-in';
+                return;
+            }
+        }
+        // Fallback if time is invalid
+        statusElement.textContent = 'Clocked in';
         statusElement.className = 'clocked-in';
     } else if (status === "Clocked out" && lastTime) {
-        const date = new Date(lastTime); // Interpreted as local time
-        statusElement.textContent = `Clocked out at ${formatTimeForDisplay(date)}`;
+        const date = new Date(lastTime);
+        if (!isNaN(date.getTime())) {
+            statusElement.textContent = `Clocked out at ${formatTimeForDisplay(date)}`;
+            statusElement.className = 'clocked-out';
+            return;
+        }
+        // Fallback if time is invalid
+        statusElement.textContent = 'Clocked out';
         statusElement.className = 'clocked-out';
     } else {
         statusElement.textContent = `Clocked out`;
@@ -833,17 +917,29 @@ function syncNoteInputs() {
     setStatus = function(status, lastTime) {
         originalSetStatus(status, lastTime);
         if (status === "Clocked in") {
-            const date = new Date(lastTime);
-            updateBothStatuses(
-                `Clocked in at ${formatTimeForDisplay(date)}`,
-                'clocked-in'
-            );
+            if (lastTime) {
+                const date = new Date(lastTime);
+                if (!isNaN(date.getTime())) {
+                    updateBothStatuses(
+                        `Clocked in at ${formatTimeForDisplay(date)}`,
+                        'clocked-in'
+                    );
+                    return;
+                }
+            }
+            // Fallback if time is invalid
+            updateBothStatuses('Clocked in', 'clocked-in');
         } else if (status === "Clocked out" && lastTime) {
             const date = new Date(lastTime);
-            updateBothStatuses(
-                `Clocked out at ${formatTimeForDisplay(date)}`,
-                'clocked-out'
-            );
+            if (!isNaN(date.getTime())) {
+                updateBothStatuses(
+                    `Clocked out at ${formatTimeForDisplay(date)}`,
+                    'clocked-out'
+                );
+                return;
+            }
+            // Fallback if time is invalid
+            updateBothStatuses('Clocked out', 'clocked-out');
         } else {
             updateBothStatuses('Clocked out', 'clocked-out');
         }
